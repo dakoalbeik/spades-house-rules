@@ -1,0 +1,18 @@
+.panel.inner {
+  margin-top: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.row.spaced {
+  justify-content: space-between;
+}
+
+.row.gap {
+  gap: 8px;
+}
+

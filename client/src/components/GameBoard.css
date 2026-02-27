@@ -1,0 +1,42 @@
+.panel.wide {
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.row.spaced {
+  justify-content: space-between;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.info,
+.error,
+.success {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.info {
+  background: #0b3b4f;
+  color: #cce8ff;
+}
+
+.error {
+  background: #4c0519;
+  color: #fecdd3;
+}
+
+.success {
+  background: #064e3b;
+  color: #a7f3d0;
+}
+

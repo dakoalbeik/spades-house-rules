@@ -1,0 +1,48 @@
+.card-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.2s, filter 0.2s;
+}
+
+.card-btn:hover:not(:disabled) {
+  transform: translateY(-8px);
+  filter: brightness(1.1);
+}
+
+.card-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.3);
+}
+
+.card-btn:disabled:hover {
+  transform: none;
+}
+
+.card-image {
+  display: block;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.card-image-small {
+  width: 60px;
+  height: auto;
+}
+
+.card-image-medium {
+  width: 80px;
+  height: auto;
+}
+
+.card-image-large {
+  width: 100px;
+  height: auto;
+}
+
+.card-display {
+  display: inline-block;
+}
+
