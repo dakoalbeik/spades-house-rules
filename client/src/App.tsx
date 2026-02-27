@@ -43,7 +43,7 @@ function App() {
   const [isRejoining, setIsRejoining] = useState(false);
   const rejoinTimeoutRef = useRef<number | null>(null);
 
-  // Save gameId and playerName to localStorage when they change
+  // Save gameId and playerName to sessionStorage when they change
   useEffect(() => {
     if (gameId) {
       saveGameId(gameId);

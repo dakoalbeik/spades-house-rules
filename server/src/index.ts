@@ -21,6 +21,7 @@ import {
   startNextRound,
   startRound,
 } from "./gameLogic";
+import { loadGames, saveGames } from "./persistence";
 import { GameOptions, GameState } from "./types";
 
 const app = express();
@@ -45,7 +46,7 @@ const io = new Server<
   allowEIO3: true,
 });
 
-const games = new Map<string, GameState>();
+const games = new Map<string, GameState>(loadGames());
 const playerToGame = new Map<string, string>();
 
 function withGame(gameId: string): GameState | null {
@@ -57,6 +58,10 @@ function broadcast(game: GameState) {
   for (const player of game.players) {
     io.to(player.id).emit("gameState", serializeGame(game, player.id));
   }
+}
+
+function persistGames() {
+  saveGames(games);
 }
 
 function validateOptions(options: Partial<GameOptions>): GameOptions {
@@ -94,6 +99,7 @@ io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
       playerToGame.set(socket.id, game.id);
       socket.join(game.id);
       broadcast(game);
+      persistGames();
       callback?.({ ok: true, gameId: game.id });
     }
   );
@@ -128,16 +134,34 @@ io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
         return;
       }
 
+      const name = (payload?.playerName ?? "Player").trim() || "Player";
+
       if (game.phase !== "lobby") {
-        callback?.({ ok: false, error: "Game already started" });
+        // Rejoin in-progress game: find existing player by name and attach this socket
+        const slot = game.players.find((p) => p.name === name);
+        if (!slot) {
+          callback?.({ ok: false, error: "No player with that name in this game" });
+          return;
+        }
+        if (game.hostId === slot.id) {
+          game.hostId = socket.id;
+        }
+        slot.id = socket.id;
+        playerToGame.set(socket.id, game.id);
+        socket.join(game.id);
+        // eslint-disable-next-line no-console
+        console.log(`Player ${socket.id} (${name}) rejoined game ${game.id}`);
+        broadcast(game);
+        persistGames();
+        callback?.({ ok: true, gameId: game.id });
         return;
       }
+
       if (game.players.length >= game.options.maxPlayers) {
         callback?.({ ok: false, error: "Game is full" });
         return;
       }
 
-      const name = (payload?.playerName ?? "Player").trim() || "Player";
       game.players.push({
         id: socket.id,
         name,
@@ -155,6 +179,7 @@ io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
       );
 
       broadcast(game);
+      persistGames();
       callback?.({ ok: true, gameId: game.id });
     }
   );
@@ -179,6 +204,7 @@ io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
         return;
       }
       broadcast(game);
+      persistGames();
       callback?.({ ok: true });
     }
   );
@@ -195,6 +221,7 @@ io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
         return;
       }
       broadcast(game);
+      persistGames();
       callback?.({ ok: true });
     }
   );
@@ -211,6 +238,7 @@ io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
         return;
       }
       broadcast(game);
+      persistGames();
       callback?.({ ok: true });
     }
   );
@@ -231,6 +259,7 @@ io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
         return;
       }
       broadcast(game);
+      persistGames();
       callback?.({ ok: true });
     }
   );
@@ -250,9 +279,11 @@ io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
     playerToGame.delete(socket.id);
     if (game.players.length === 0) {
       games.delete(gameId);
+      persistGames();
       return;
     }
     broadcast(game);
+    persistGames();
   });
 });
 
