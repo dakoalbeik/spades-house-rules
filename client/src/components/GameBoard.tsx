@@ -1,7 +1,7 @@
 import type { GameState, PublicPlayer } from "../types";
 import PlayerList from "./PlayerList";
 import BiddingPanel from "./BiddingPanel";
-import TrickDisplay from "./TrickDisplay";
+import GameTable from "./GameTable";
 import Hand from "./Hand";
 import "./GameBoard.css";
 
@@ -64,7 +64,11 @@ export default function GameBoard({
         <div className="info">{game.statusMessage}</div>
       ) : null}
 
-      <PlayerList game={game} />
+      {game.phase === "lobby" ? (
+        <PlayerList game={game} />
+      ) : (
+        <GameTable game={game} myPlayer={myPlayer} socketId={socketId} />
+      )}
 
       <BiddingPanel
         game={game}
@@ -73,8 +77,6 @@ export default function GameBoard({
         onBidInputChange={onBidInputChange}
         onBid={onBid}
       />
-
-      <TrickDisplay game={game} />
 
       <Hand
         game={game}

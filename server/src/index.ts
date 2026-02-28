@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import cors from "cors";
 import express from "express";
 import http from "http";
@@ -21,8 +22,11 @@ import {
   startNextRound,
   startRound,
 } from "./gameLogic";
-import { loadGames, saveGames } from "./persistence";
+import { cleanupOldGames, loadGames, saveGames } from "./persistence";
 import { GameOptions, GameState } from "./types";
+
+/** Remove persisted games older than this (e.g. 30 days) so storage doesn't grow forever */
+const MAX_GAME_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 const app = express();
 app.use(cors());
@@ -47,6 +51,12 @@ const io = new Server<
 });
 
 const games = new Map<string, GameState>(loadGames());
+const removed = cleanupOldGames(games, MAX_GAME_AGE_MS);
+if (removed > 0) {
+  saveGames(games);
+  // eslint-disable-next-line no-console
+  console.log(`Cleaned up ${removed} old game(s) (older than 30 days).`);
+}
 const playerToGame = new Map<string, string>();
 
 function withGame(gameId: string): GameState | null {
@@ -100,7 +110,7 @@ io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
       socket.join(game.id);
       broadcast(game);
       persistGames();
-      callback?.({ ok: true, gameId: game.id });
+      callback?.({ ok: true, gameId: game.id, playerId: game.players[0].playerId });
     }
   );
 
@@ -124,23 +134,31 @@ io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
         return;
       }
 
-      // Check if player is already in this game
-      const alreadyInGame = game.players.some((p) => p.id === socket.id);
+      // Check if player is already in this game (same socket)
+      const alreadyInGame = game.players.find((p) => p.id === socket.id);
       if (alreadyInGame) {
         // eslint-disable-next-line no-console
         console.log(`Player ${socket.id} already in game ${gameIdUpper}`);
         broadcast(game);
-        callback?.({ ok: true, gameId: game.id });
+        callback?.({ ok: true, gameId: game.id, playerId: alreadyInGame.playerId });
         return;
       }
 
       const name = (payload?.playerName ?? "Player").trim() || "Player";
+      const rejoinPlayerId = payload?.playerId?.trim();
 
       if (game.phase !== "lobby") {
-        // Rejoin in-progress game: find existing player by name and attach this socket
-        const slot = game.players.find((p) => p.name === name);
+        // Rejoin in-progress game: find by stable playerId first, then by name
+        const slot =
+          (rejoinPlayerId && game.players.find((p) => p.playerId === rejoinPlayerId)) ||
+          game.players.find((p) => p.name === name);
         if (!slot) {
-          callback?.({ ok: false, error: "No player with that name in this game" });
+          callback?.({
+            ok: false,
+            error: rejoinPlayerId
+              ? "No player in this game with that session. Re-enter the game ID and your name to rejoin."
+              : "No player with that name in this game",
+          });
           return;
         }
         if (game.hostId === slot.id) {
@@ -150,10 +168,10 @@ io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
         playerToGame.set(socket.id, game.id);
         socket.join(game.id);
         // eslint-disable-next-line no-console
-        console.log(`Player ${socket.id} (${name}) rejoined game ${game.id}`);
+        console.log(`Player ${socket.id} (${slot.name}) rejoined game ${game.id}`);
         broadcast(game);
         persistGames();
-        callback?.({ ok: true, gameId: game.id });
+        callback?.({ ok: true, gameId: game.id, playerId: slot.playerId });
         return;
       }
 
@@ -162,8 +180,10 @@ io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
         return;
       }
 
+      const stablePlayerId = randomUUID();
       game.players.push({
         id: socket.id,
+        playerId: stablePlayerId,
         name,
         hand: [],
         tricks: 0,
@@ -180,7 +200,7 @@ io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
 
       broadcast(game);
       persistGames();
-      callback?.({ ok: true, gameId: game.id });
+      callback?.({ ok: true, gameId: game.id, playerId: stablePlayerId });
     }
   );
 
@@ -277,13 +297,11 @@ io.on("connection", (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
     if (!game) return;
     removePlayer(game, socket.id);
     playerToGame.delete(socket.id);
-    if (game.players.length === 0) {
-      games.delete(gameId);
-      persistGames();
-      return;
-    }
-    broadcast(game);
+    // Keep the game so clients can reconnect later; never delete here
     persistGames();
+    if (game.players.length > 0) {
+      broadcast(game);
+    }
   });
 });
 

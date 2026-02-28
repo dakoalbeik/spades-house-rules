@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
 import type { ClientToServerEvents, ServerToClientEvents } from "shared";
 import type { GameState } from "./types";
@@ -6,6 +6,9 @@ import {
   saveGameId,
   getGameId,
   clearGameId,
+  savePlayerId,
+  getPlayerId,
+  clearPlayerId,
   savePlayerName,
   getPlayerName,
 } from "./utils/storage";
@@ -24,7 +27,10 @@ function App() {
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
-    }) as import("socket.io-client").Socket<ServerToClientEvents, ClientToServerEvents>;
+    }) as import("socket.io-client").Socket<
+      ServerToClientEvents,
+      ClientToServerEvents
+    >;
     console.log("Socket.IO client created, connecting to:", serverUrl);
     return s;
   }, []);
@@ -41,7 +47,6 @@ function App() {
   const [status, setStatus] = useState("Connecting...");
   const [isJoining, setIsJoining] = useState(false);
   const [isRejoining, setIsRejoining] = useState(false);
-  const rejoinTimeoutRef = useRef<number | null>(null);
 
   // Save gameId and playerName to sessionStorage when they change
   useEffect(() => {
@@ -76,11 +81,6 @@ function App() {
       setGame(next);
       setGameId(next.id);
       setIsRejoining(false);
-      // Clear rejoin timeout if it exists
-      if (rejoinTimeoutRef.current) {
-        clearTimeout(rejoinTimeoutRef.current);
-        rejoinTimeoutRef.current = null;
-      }
     }
 
     socket.on("connect", () => {
@@ -88,37 +88,40 @@ function App() {
       setSocketId(newSocketId);
       setStatus("Connected");
 
-      // Try to rejoin if we have a saved gameId
+      // Rejoin by gameId + playerId (session storage) so this tab recovers after refresh
       const savedGameId = getGameId();
       const savedPlayerName = getPlayerName();
+      const savedPlayerId = getPlayerId();
 
-      if (savedGameId && savedPlayerName && !game) {
-        console.log("Attempting to rejoin game:", savedGameId);
+      if (savedGameId && savedPlayerId && !game) {
+        console.log(
+          "Attempting to rejoin game:",
+          savedGameId,
+          "playerId:",
+          savedPlayerId,
+        );
         setIsRejoining(true);
-
-        // Request state - if we're in the game, we'll get it via gameState event
-        // Set a timeout to try joining if no state comes back
-        rejoinTimeoutRef.current = setTimeout(() => {
-          // If no game state received, try to join
-          console.log("No game state received, attempting to join...");
-          socket.emit("joinGame", { gameId: savedGameId, playerName: savedPlayerName }, (resp) => {
-              setIsRejoining(false);
-              if (!resp || !resp.ok) {
-                console.log("Could not rejoin game:", resp?.error);
-                handleError(
-                  resp?.error || "Could not rejoin game. It may have ended."
-                );
-                clearGameId();
-              } else {
-                handleSuccess("Rejoined game successfully!");
-              }
+        socket.emit(
+          "joinGame",
+          {
+            gameId: savedGameId,
+            playerId: savedPlayerId,
+            playerName: savedPlayerName ?? undefined,
+          },
+          (resp) => {
+            setIsRejoining(false);
+            if (!resp || !resp.ok) {
+              console.log("Could not rejoin game:", resp?.error);
+              handleError(
+                resp?.error || "Could not rejoin game. It may have ended.",
+              );
+              clearGameId();
+              clearPlayerId();
+            } else {
+              handleSuccess("Rejoined game successfully!");
             }
-          );
-          rejoinTimeoutRef.current = null;
-        }, 1000);
-
-        // Request state - if we're already in the game, we'll receive it
-        socket.emit("requestState", { gameId: savedGameId });
+          },
+        );
       } else if (gameId) {
         // Just request state for current game
         socket.emit("requestState", { gameId });
@@ -145,6 +148,12 @@ function App() {
   const handleGameIdChange = (id: string) => {
     setGameId(id);
   };
+
+  const handleJoinedGame = useCallback((id: string, playerId: string) => {
+    saveGameId(id);
+    savePlayerId(playerId);
+    setGameId(id);
+  }, []);
 
   const handlePlayerNameChange = (name: string) => {
     setPlayerName(name);
@@ -207,6 +216,7 @@ function App() {
           numDecks={numDecks}
           maxPlayers={maxPlayers}
           onGameIdChange={handleGameIdChange}
+          onJoinedGame={handleJoinedGame}
           onPlayerNameChange={handlePlayerNameChange}
           onNumDecksChange={setNumDecks}
           onMaxPlayersChange={setMaxPlayers}

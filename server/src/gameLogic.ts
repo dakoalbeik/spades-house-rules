@@ -191,6 +191,7 @@ export function createGame(
     players: [
       {
         id: hostId,
+        playerId: randomUUID(),
         name: hostName,
         hand: [],
         tricks: 0,
@@ -204,6 +205,7 @@ export function createGame(
     bidIndex: 0,
     roundNumber: 0,
     statusMessage: "Waiting for players...",
+    createdAt: Date.now(),
   };
 }
 

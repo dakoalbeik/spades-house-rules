@@ -16,6 +16,8 @@ export interface CreateGamePayload {
 export interface JoinGamePayload {
   gameId: string;
   playerName?: string;
+  /** Stable player id (from session storage) to rejoin after refresh */
+  playerId?: string;
 }
 
 export interface StartGamePayload {
@@ -46,6 +48,8 @@ export interface GameResponse {
   ok: boolean;
   error?: string;
   gameId?: string;
+  /** Stable player id for this tab; save to session storage for rejoin */
+  playerId?: string;
 }
 
 export interface OkErrorResponse {

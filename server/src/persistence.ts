@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import type { GameState } from "./types";
+import type { GameState, PlayerState } from "./types";
 
 const DEFAULT_PATH = path.join(process.cwd(), "data", "gamestate.json");
 
@@ -22,7 +22,16 @@ export function loadGames(filePath: string = DEFAULT_PATH): Map<string, GameStat
     if (data && typeof data === "object") {
       for (const [id, state] of Object.entries(data)) {
         if (state && state.id && state.players && Array.isArray(state.players)) {
-          map.set(id, state as GameState);
+          const game = state as GameState;
+          if (typeof game.createdAt !== "number") {
+            game.createdAt = 0;
+          }
+          for (const p of game.players) {
+            if (!p.playerId) {
+              (p as PlayerState).playerId = p.id;
+            }
+          }
+          map.set(id, game);
         }
       }
     }
@@ -45,4 +54,20 @@ export function saveGames(games: Map<string, GameState>, filePath: string = DEFA
     // eslint-disable-next-line no-console
     console.error("Failed to save gamestate file:", err);
   }
+}
+
+/** Remove games older than maxAgeMs (by createdAt). Returns number removed. */
+export function cleanupOldGames(
+  games: Map<string, GameState>,
+  maxAgeMs: number
+): number {
+  const cutoff = Date.now() - maxAgeMs;
+  let removed = 0;
+  for (const [id, state] of games.entries()) {
+    if (state.createdAt > 0 && state.createdAt < cutoff) {
+      games.delete(id);
+      removed += 1;
+    }
+  }
+  return removed;
 }

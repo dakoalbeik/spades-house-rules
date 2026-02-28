@@ -11,6 +11,7 @@ interface LobbyProps {
   numDecks: number;
   maxPlayers: number;
   onGameIdChange: (id: string) => void;
+  onJoinedGame?: (gameId: string, playerId: string) => void;
   onPlayerNameChange: (name: string) => void;
   onNumDecksChange: (decks: number) => void;
   onMaxPlayersChange: (players: number) => void;
@@ -28,6 +29,7 @@ export default function Lobby({
   numDecks,
   maxPlayers,
   onGameIdChange,
+  onJoinedGame,
   onPlayerNameChange,
   onNumDecksChange,
   onMaxPlayersChange,
@@ -58,6 +60,7 @@ export default function Lobby({
         }
         if (resp.gameId) {
           onGameIdChange(resp.gameId);
+          if (resp.playerId) onJoinedGame?.(resp.gameId, resp.playerId);
           onSuccess(`Game created! Share ID: ${resp.gameId}`);
         }
       }
@@ -107,6 +110,7 @@ export default function Lobby({
           onSuccess(`Successfully joined game ${trimmedGameId}!`);
           if (resp.gameId) {
             onGameIdChange(resp.gameId);
+            if (resp.playerId) onJoinedGame?.(resp.gameId, resp.playerId);
           }
         }
       }

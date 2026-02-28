@@ -23,6 +23,8 @@ export interface Card {
 
 export interface PlayerState {
   id: string;
+  /** Stable id for this seat (survives reconnect); used with gameId to rejoin */
+  playerId: string;
   name: string;
   hand: Card[];
   bid?: number;
@@ -60,6 +62,8 @@ export interface GameState {
   bidIndex: number;
   roundNumber: number;
   statusMessage?: string;
+  /** Timestamp when the game was created; used for persistence and later cleanup of old games */
+  createdAt: number;
 }
 
 export interface PublicPlayer {
