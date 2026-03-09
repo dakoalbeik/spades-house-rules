@@ -34,6 +34,9 @@
   padding: 8px;
 }
 
+.table-seat-opponent {
+}
+
 .table-seat-top {
   grid-column: 2;
   grid-row: 1;
@@ -133,44 +136,37 @@
   padding: 12px;
 }
 
-.trick-zone {
-  position: relative;
-  width: 140px;
-  height: 120px;
-}
-
-.trick-slot {
-  position: absolute;
+/* Trick card placed in front of each seat */
+.trick-slot-at-seat {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.trick-slot-bottom {
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+.trick-slot-at-seat.trick-slot-bottom {
+  align-self: center;
+  margin-bottom: 4px;
 }
 
-.trick-slot-top {
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
+.trick-slot-at-seat.trick-slot-top {
+  align-self: center;
+  margin-top: 4px;
+  order: 1; /* appear below name/backs, toward center */
 }
 
-.trick-slot-left {
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
+.trick-slot-at-seat.trick-slot-left {
+  align-self: center;
+  margin-right: 8px;
+  order: 1; /* appear to the right of name/backs, toward center */
 }
 
-.trick-slot-right {
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+.trick-slot-at-seat.trick-slot-right {
+  align-self: center;
+  margin-left: 8px;
 }
 
-.trick-slot .card-image-small {
+.trick-slot-at-seat .card-image-small {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
 

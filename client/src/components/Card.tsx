@@ -7,14 +7,22 @@ interface CardProps {
   onClick?: () => void;
   disabled?: boolean;
   size?: "small" | "medium" | "large";
+  style?: React.CSSProperties;
 }
 
-export default function Card({ card, onClick, disabled, size = "medium" }: CardProps) {
+export default function Card({
+  card,
+  onClick,
+  disabled,
+  style,
+  size = "medium",
+}: CardProps) {
   const sizeClass = `card-image-${size}`;
-  
+
   if (onClick) {
     return (
       <button
+        style={style}
         className={`card-btn ${disabled ? "disabled" : ""}`}
         onClick={onClick}
         disabled={disabled}
@@ -39,4 +47,3 @@ export default function Card({ card, onClick, disabled, size = "medium" }: CardP
     </div>
   );
 }
-

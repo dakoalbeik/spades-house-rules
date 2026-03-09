@@ -3,6 +3,12 @@
  * Keeps client and server in sync on the wire format.
  */
 
+import { Brand} from "./general";
+
+export type PlayerId = Brand<string, "PlayerId">;
+export type GameId = Brand<string, "GameId">;
+export type CardId = Brand<string, "CardId">;
+
 export type Suit = "spades" | "hearts" | "diamonds" | "clubs";
 
 export type Rank =
@@ -21,27 +27,30 @@ export type Rank =
   | "A";
 
 export interface Card {
-  id: string;
+  id: CardId;
   suit: Suit;
   rank: Rank;
   deckIndex?: number;
 }
 
 export interface TrickPlay {
-  playerId: string;
+  playerId: PlayerId;
   card: Card;
 }
 
 export interface CurrentTrick {
-  leaderId: string;
+  leaderId: PlayerId;
   leadSuit?: Suit;
   plays: TrickPlay[];
 }
 
 export type GamePhase = "lobby" | "bidding" | "playing" | "round_end";
 
+export type PlayerStatus = "active" | "left";
+
 export interface PublicPlayer {
   id: string;
+  playerId: PlayerId;
   name: string;
   score: number;
   tricks: number;
@@ -49,6 +58,7 @@ export interface PublicPlayer {
   cardCount: number;
   isHost: boolean;
   isSelf: boolean;
+  status: PlayerStatus;
 }
 
 /** Game state payload sent from server to client on "gameState" event */
@@ -62,5 +72,50 @@ export interface GameStatePayload {
   currentTrick?: CurrentTrick;
   roundNumber: number;
   statusMessage?: string;
-  currentTurnPlayerId: string | null;
+  currentTurnPlayerId: PlayerId | null;
+}
+
+export interface PlayerState {
+  id: string;
+  playerId: PlayerId;
+  name: string;
+  hand: Card[];
+  tricks: number;
+  score: number;
+  bid?: number;
+  isHost: boolean;
+  status: PlayerStatus;
+}
+
+export type GameOptions = {
+  numDecks: number;
+  maxPlayers: number;
+};
+
+export interface GameState {
+  id: GameId;
+  hostId: PlayerId;
+  players: PlayerState[];
+  options: GameOptions;
+  phase: GamePhase;
+  currentTrick?: CurrentTrick;
+  spadesBroken: boolean;
+  bidIndex: number;
+  roundNumber: number;
+  statusMessage?: string;
+  /** Timestamp when the game was created; used for persistence and later cleanup of old games */
+  createdAt: number;
+}
+
+export interface SerializedGame {
+  id: string;
+  phase: GamePhase;
+  options: GameOptions;
+  players: PublicPlayer[];
+  hand: Card[];
+  spadesBroken: boolean;
+  currentTrick?: CurrentTrick;
+  roundNumber: number;
+  statusMessage?: string;
+  currentTurnPlayerId: PlayerId | null;
 }

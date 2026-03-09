@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import type { GameState, PlayerState } from "./types";
+import type { GameState, PlayerState } from "shared";
 
 const DEFAULT_PATH = path.join(process.cwd(), "data", "gamestate.json");
 
@@ -11,7 +11,9 @@ function ensureDataDir(filePath: string): void {
   }
 }
 
-export function loadGames(filePath: string = DEFAULT_PATH): Map<string, GameState> {
+export function loadGames(
+  filePath: string = DEFAULT_PATH,
+): Map<string, GameState> {
   const map = new Map<string, GameState>();
   if (!fs.existsSync(filePath)) {
     return map;
@@ -21,14 +23,22 @@ export function loadGames(filePath: string = DEFAULT_PATH): Map<string, GameStat
     const data = JSON.parse(raw) as Record<string, GameState>;
     if (data && typeof data === "object") {
       for (const [id, state] of Object.entries(data)) {
-        if (state && state.id && state.players && Array.isArray(state.players)) {
+        if (
+          state &&
+          state.id &&
+          state.players &&
+          Array.isArray(state.players)
+        ) {
           const game = state as GameState;
           if (typeof game.createdAt !== "number") {
             game.createdAt = 0;
           }
           for (const p of game.players) {
             if (!p.playerId) {
-              (p as PlayerState).playerId = p.id;
+              (p as PlayerState).playerId = p.playerId;
+            }
+            if (!(p as PlayerState).status) {
+              (p as PlayerState).status = "active";
             }
           }
           map.set(id, game);
@@ -42,7 +52,10 @@ export function loadGames(filePath: string = DEFAULT_PATH): Map<string, GameStat
   return map;
 }
 
-export function saveGames(games: Map<string, GameState>, filePath: string = DEFAULT_PATH): void {
+export function saveGames(
+  games: Map<string, GameState>,
+  filePath: string = DEFAULT_PATH,
+): void {
   try {
     ensureDataDir(filePath);
     const obj: Record<string, GameState> = {};
@@ -59,7 +72,7 @@ export function saveGames(games: Map<string, GameState>, filePath: string = DEFA
 /** Remove games older than maxAgeMs (by createdAt). Returns number removed. */
 export function cleanupOldGames(
   games: Map<string, GameState>,
-  maxAgeMs: number
+  maxAgeMs: number,
 ): number {
   const cutoff = Date.now() - maxAgeMs;
   let removed = 0;

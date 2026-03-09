@@ -8,27 +8,25 @@ import "./GameBoard.css";
 interface GameBoardProps {
   game: GameState;
   myPlayer: PublicPlayer | undefined;
-  socketId: string;
   bidInput: string;
   onBidInputChange: (bid: string) => void;
-  onBid: () => void;
+  onBid: (bid: number) => void;
   onStart: () => void;
   onNextRound: () => void;
   onPlayCard: (cardId: string) => void;
   canPlay: (cardId: string) => boolean;
+  onKick?: (playerId: string) => void;
 }
 
 export default function GameBoard({
   game,
   myPlayer,
-  socketId,
-  bidInput,
-  onBidInputChange,
   onBid,
   onStart,
   onNextRound,
   onPlayCard,
   canPlay,
+  onKick,
 }: GameBoardProps) {
   const phaseLabel: Record<GameState["phase"], string> = {
     lobby: "Lobby",
@@ -37,7 +35,7 @@ export default function GameBoard({
     round_end: "Round finished",
   };
 
-  const isMyTurn = game.currentTurnPlayerId === socketId;
+  const isMyTurn = myPlayer?.playerId === game.currentTurnPlayerId;
 
   return (
     <section className="panel wide">
@@ -65,16 +63,15 @@ export default function GameBoard({
       ) : null}
 
       {game.phase === "lobby" ? (
-        <PlayerList game={game} />
+        <PlayerList game={game} canKick={myPlayer?.isHost} onKick={onKick} />
       ) : (
-        <GameTable game={game} myPlayer={myPlayer} socketId={socketId} />
+        <GameTable game={game} myPlayer={myPlayer} />
       )}
 
       <BiddingPanel
         game={game}
         myPlayer={myPlayer}
-        bidInput={bidInput}
-        onBidInputChange={onBidInputChange}
+        hand={game.hand}
         onBid={onBid}
       />
 
@@ -87,4 +84,3 @@ export default function GameBoard({
     </section>
   );
 }
-

@@ -1,19 +1,17 @@
-import type { GameState, PublicPlayer } from "../types";
+import type { Card, GameState, PublicPlayer } from "../types";
 import "./BiddingPanel.css";
 
 interface BiddingPanelProps {
   game: GameState;
   myPlayer: PublicPlayer | undefined;
-  bidInput: string;
-  onBidInputChange: (bid: string) => void;
-  onBid: () => void;
+  hand: Card[];
+  onBid: (bid: number) => void;
 }
 
 export default function BiddingPanel({
   game,
   myPlayer,
-  bidInput,
-  onBidInputChange,
+  hand,
   onBid,
 }: BiddingPanelProps) {
   if (game.phase !== "bidding" || !myPlayer) {
@@ -28,20 +26,14 @@ export default function BiddingPanel({
           <p className="muted">Bid how many tricks you expect to take.</p>
         </div>
         <div className="row gap">
-          <input
-            type="number"
-            min={0}
-            max={game.hand.length}
-            value={bidInput}
-            onChange={(e) => onBidInputChange(e.target.value)}
-            disabled={game.currentTurnPlayerId !== myPlayer.id}
-          />
-          <button
-            disabled={game.currentTurnPlayerId !== myPlayer.id}
-            onClick={onBid}
-          >
-            Submit bid
-          </button>
+          {hand.map((card, index) => {
+            const bid = index + 1;
+            return (
+              <button key={card.id} onClick={() => onBid(bid)}>
+                {bid}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -134,12 +134,20 @@ function App() {
       setStatus(`Error: ${error.message}`);
     });
     socket.on("gameState", handleState);
+    socket.on("kicked", (message) => {
+      setGame(null);
+      setGameId("");
+      clearGameId();
+      clearPlayerId();
+      handleError(message || "You were kicked from the lobby");
+    });
 
     return () => {
       socket.off("connect");
       socket.off("disconnect");
       socket.off("connect_error");
       socket.off("gameState", handleState);
+      socket.off("kicked");
     };
   }, [socket, gameId, game, handleError, handleSuccess]);
 
@@ -189,10 +197,17 @@ function App() {
     });
   };
 
+  const handleKick = (playerId: string) => {
+    if (!gameId) return;
+    socket.emit("kickPlayer", { gameId, playerId }, (resp) => {
+      if (!resp?.ok) handleError(resp?.error);
+    });
+  };
+
   const canPlay = (cardId: string) => {
     if (!game || game.phase !== "playing") return false;
-    const isMyTurn = game.currentTurnPlayerId === socketId;
-    return isMyTurn === true && !!game.hand.find((c) => c.id === cardId);
+    const isMyTurn = myPlayer?.playerId === game.currentTurnPlayerId;
+    return isMyTurn && !!game.hand.find((c) => c.id === cardId);
   };
 
   return (
@@ -238,6 +253,7 @@ function App() {
           onNextRound={handleNextRound}
           onPlayCard={handlePlay}
           canPlay={canPlay}
+          onKick={handleKick}
         />
       )}
     </div>

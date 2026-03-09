@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import {
+import type {
   Card,
   CurrentTrick,
   GameOptions,
@@ -9,7 +9,10 @@ import {
   Rank,
   SerializedGame,
   Suit,
-} from "./types";
+  PlayerId,
+} from "shared";
+
+const DEFAULT_STATUS: "active" = "active";
 
 const suits: Suit[] = ["spades", "hearts", "diamonds", "clubs"];
 const ranks: Rank[] = [
@@ -52,7 +55,7 @@ export function generateGameId(): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   return Array.from(
     { length: 6 },
-    () => alphabet[Math.floor(Math.random() * alphabet.length)]
+    () => alphabet[Math.floor(Math.random() * alphabet.length)],
   ).join("");
 }
 
@@ -82,24 +85,24 @@ function shuffle<T>(items: T[]): T[] {
   return copy;
 }
 
-function getPlayOrder(game: GameState): string[] {
+function getPlayOrder(game: GameState): PlayerId[] {
   if (!game.currentTrick) return [];
   const leaderIndex = game.players.findIndex(
-    (p) => p.id === game.currentTrick?.leaderId
+    (p) => p.playerId === game.currentTrick?.leaderId,
   );
-  if (leaderIndex === -1) return game.players.map((p) => p.id);
+  if (leaderIndex === -1) return game.players.map((p) => p.playerId);
 
-  const ordered: string[] = [];
+  const ordered: PlayerId[] = [];
   for (let i = 0; i < game.players.length; i += 1) {
     const idx = (leaderIndex + i) % game.players.length;
-    ordered.push(game.players[idx].id);
+    ordered.push(game.players[idx].playerId);
   }
   return ordered;
 }
 
-export function getCurrentTurn(game: GameState): string | null {
+export function getCurrentTurn(game: GameState): PlayerId | null {
   if (game.phase === "bidding") {
-    return game.players[game.bidIndex]?.id ?? null;
+    return game.players[game.bidIndex]?.playerId ?? null;
   }
   if (game.phase === "playing" && game.currentTrick) {
     const order = getPlayOrder(game);
@@ -108,7 +111,7 @@ export function getCurrentTurn(game: GameState): string | null {
   return null;
 }
 
-function determineTrickWinner(trick: CurrentTrick): string {
+function determineTrickWinner(trick: CurrentTrick): PlayerId {
   const leadSuit = trick.leadSuit ?? trick.plays[0]?.card.suit;
   let winning = trick.plays[0];
   for (let i = 1; i < trick.plays.length; i += 1) {
@@ -152,10 +155,14 @@ function scoreRound(game: GameState): void {
 
 export function serializeGame(
   game: GameState,
-  viewerId: string
+  viewerId: string,
 ): SerializedGame {
   const viewer = game.players.find((p) => p.id === viewerId);
   const currentTurn = getCurrentTurn(game);
+  const viewerIndex = game.players.findIndex((p) => p.id === viewerId);
+  const orderedPlayers = game.players
+    .slice(viewerIndex)
+    .concat(game.players.slice(0, viewerIndex));
   return {
     id: game.id,
     phase: game.phase,
@@ -166,8 +173,9 @@ export function serializeGame(
     statusMessage: game.statusMessage,
     currentTurnPlayerId: currentTurn,
     hand: viewer?.hand ?? [],
-    players: game.players.map((p) => ({
+    players: orderedPlayers.map((p) => ({
       id: p.id,
+      playerId: p.playerId,
       name: p.name,
       score: p.score,
       tricks: p.tricks,
@@ -175,28 +183,35 @@ export function serializeGame(
       cardCount: p.hand.length,
       isHost: p.isHost,
       isSelf: p.id === viewerId,
+      status: p.status ?? DEFAULT_STATUS,
     })),
   };
+}
+
+export function newPlayerId(): PlayerId {
+  return randomUUID() as PlayerId;
 }
 
 export function createGame(
   hostId: string,
   hostName: string,
-  options: GameOptions
+  options: GameOptions,
 ): GameState {
+  const playerId = newPlayerId();
   return {
     id: generateGameId(),
-    hostId,
+    hostId: playerId,
     options,
     players: [
       {
         id: hostId,
-        playerId: randomUUID(),
+        playerId,
         name: hostName,
         hand: [],
         tricks: 0,
         score: 0,
         isHost: true,
+        status: DEFAULT_STATUS,
       },
     ],
     phase: "lobby",
@@ -209,10 +224,14 @@ export function createGame(
   };
 }
 
+function countActivePlayers(game: GameState): number {
+  return game.players.filter((p) => (p.status ?? "active") === "active").length;
+}
+
 export function startRound(
-  game: GameState
+  game: GameState,
 ): { ok: true } | { ok: false; error: string } {
-  if (game.players.length < MIN_PLAYERS) {
+  if (countActivePlayers(game) < MIN_PLAYERS) {
     return { ok: false, error: `Need at least ${MIN_PLAYERS} players` };
   }
   game.roundNumber += 1;
@@ -235,7 +254,7 @@ export function startRound(
   game.spadesBroken = false;
   game.bidIndex = 0;
   game.currentTrick = {
-    leaderId: game.players[0].id,
+    leaderId: game.players[0].playerId,
     plays: [],
   };
   game.phase = "bidding";
@@ -246,7 +265,7 @@ export function startRound(
 export function placeBid(
   game: GameState,
   playerId: string,
-  bid: number
+  bid: number,
 ): { ok: true } | { ok: false; error: string } {
   if (game.phase !== "bidding")
     return { ok: false, error: "Not in bidding phase" };
@@ -270,17 +289,19 @@ export function placeBid(
 
 export function playCard(
   game: GameState,
-  playerId: string,
-  cardId: string
+  socketId: string,
+  cardId: string,
 ): { ok: true } | { ok: false; error: string } {
   if (game.phase !== "playing" || !game.currentTrick)
     return { ok: false, error: "Not in play phase" };
+
+  const player = game.players.find((p) => p.id === socketId);
+  if (!player) return { ok: false, error: "Player not found" };
+
   const expected = getCurrentTurn(game);
-  if (expected !== playerId)
+  if (expected !== player.playerId)
     return { ok: false, error: "Not your turn to play" };
 
-  const player = game.players.find((p) => p.id === playerId);
-  if (!player) return { ok: false, error: "Player not found" };
   const cardIndex = player.hand.findIndex((c) => c.id === cardId);
   if (cardIndex === -1) return { ok: false, error: "Card not in hand" };
   const card = player.hand[cardIndex];
@@ -306,7 +327,7 @@ export function playCard(
   }
 
   player.hand.splice(cardIndex, 1);
-  game.currentTrick.plays.push({ playerId, card });
+  game.currentTrick.plays.push({ playerId: player.playerId, card });
   if (!game.currentTrick.leadSuit) {
     game.currentTrick.leadSuit = card.suit;
   }
@@ -316,7 +337,7 @@ export function playCard(
 
   if (game.currentTrick.plays.length === game.players.length) {
     const winnerId = determineTrickWinner(game.currentTrick);
-    const winner = game.players.find((p) => p.id === winnerId);
+    const winner = game.players.find((p) => p.playerId === winnerId);
     if (winner) {
       winner.tricks += 1;
       game.statusMessage = `${winner.name} won the trick`;
@@ -338,7 +359,7 @@ export function playCard(
 }
 
 export function startNextRound(
-  game: GameState
+  game: GameState,
 ): { ok: true } | { ok: false; error: string } {
   if (game.phase !== "round_end" && game.phase !== "lobby") {
     return { ok: false, error: "Cannot start a new round yet" };
@@ -346,12 +367,172 @@ export function startNextRound(
   return startRound(game);
 }
 
-export function removePlayer(game: GameState, playerId: string): void {
-  const idx = game.players.findIndex((p) => p.id === playerId);
+/** Mark a player as left (disconnected) but keep them in the game so they can rejoin. */
+export function setPlayerLeft(game: GameState, socketId: string): void {
+  const player = game.players.find((p) => p.id === socketId);
+  if (!player) return;
+  player.status = "left";
+  player.id = "";
+
+  if (player.isHost) {
+    const nextHost =
+      game.players.find((p) => p.status === "active" && p.id) ??
+      game.players[0];
+    if (nextHost && nextHost !== player) {
+      game.hostId = nextHost.playerId;
+      nextHost.isHost = true;
+      player.isHost = false;
+    }
+  }
+}
+
+/** Place a bid for whoever is currently up (used for left players). */
+function placeBidForCurrentBidder(
+  game: GameState,
+  bid: number,
+): { ok: true } | { ok: false; error: string } {
+  if (game.phase !== "bidding")
+    return { ok: false, error: "Not in bidding phase" };
+  const player = game.players[game.bidIndex];
+  if (!player) return { ok: false, error: "No current bidder" };
+  if (!Number.isInteger(bid) || bid < 0)
+    return { ok: false, error: "Invalid bid" };
+  if (bid > player.hand.length)
+    return { ok: false, error: "Bid exceeds hand size" };
+
+  player.bid = bid;
+  game.bidIndex += 1;
+  if (game.bidIndex >= game.players.length) {
+    game.phase = "playing";
+    game.statusMessage = `Round ${game.roundNumber}: playing`;
+  }
+  return { ok: true };
+}
+
+/** Get the first legal card id for a player in the current trick (for auto-play). */
+function getLegalCardIds(game: GameState, player: PlayerState): string[] {
+  if (!game.currentTrick || game.phase !== "playing") return [];
+  const leadSuit =
+    game.currentTrick.leadSuit ?? game.currentTrick.plays[0]?.card.suit;
+  const hasLeadSuit = leadSuit
+    ? player.hand.some((c) => c.suit === leadSuit)
+    : false;
+  const hasNonSpades = player.hand.some((c) => c.suit !== "spades");
+
+  return player.hand
+    .filter((c) => {
+      if (leadSuit && hasLeadSuit && c.suit !== leadSuit) return false;
+      if (
+        !leadSuit &&
+        c.suit === "spades" &&
+        !game.spadesBroken &&
+        hasNonSpades
+      ) {
+        return false;
+      }
+      return true;
+    })
+    .map((c) => c.id);
+}
+
+/** Play a card by stable playerId (used for left players). */
+function playCardByPlayerId(
+  game: GameState,
+  stablePlayerId: PlayerId,
+  cardId: string,
+): { ok: true } | { ok: false; error: string } {
+  if (game.phase !== "playing" || !game.currentTrick)
+    return { ok: false, error: "Not in play phase" };
+  const player = game.players.find((p) => p.playerId === stablePlayerId);
+  if (!player) return { ok: false, error: "Player not found" };
+
+  const expected = getCurrentTurn(game);
+  if (expected !== player.playerId)
+    return { ok: false, error: "Not their turn" };
+
+  const cardIndex = player.hand.findIndex((c) => c.id === cardId);
+  if (cardIndex === -1) return { ok: false, error: "Card not in hand" };
+  const card = player.hand[cardIndex];
+
+  const leadSuit =
+    game.currentTrick.leadSuit ?? game.currentTrick.plays[0]?.card.suit;
+  const hasLeadSuit = leadSuit
+    ? player.hand.some((c) => c.suit === leadSuit)
+    : false;
+  if (leadSuit && card.suit !== leadSuit && hasLeadSuit) {
+    return { ok: false, error: `Must follow suit: ${leadSuit}` };
+  }
+  const hasNonSpades = player.hand.some((c) => c.suit !== "spades");
+  if (
+    !leadSuit &&
+    card.suit === "spades" &&
+    !game.spadesBroken &&
+    hasNonSpades
+  ) {
+    return { ok: false, error: "Spades not broken" };
+  }
+
+  player.hand.splice(cardIndex, 1);
+  game.currentTrick.plays.push({ playerId: player.playerId, card });
+  if (!game.currentTrick.leadSuit) {
+    game.currentTrick.leadSuit = card.suit;
+  }
+  if (card.suit === "spades") {
+    game.spadesBroken = true;
+  }
+
+  if (game.currentTrick.plays.length === game.players.length) {
+    const winnerId = determineTrickWinner(game.currentTrick);
+    const winner = game.players.find((p) => p.playerId === winnerId);
+    if (winner) {
+      winner.tricks += 1;
+      game.statusMessage = `${winner.name} won the trick`;
+    }
+    const handsEmpty = game.players.every((p) => p.hand.length === 0);
+    if (handsEmpty) {
+      scoreRound(game);
+      return { ok: true };
+    }
+    game.currentTrick = {
+      leaderId: winnerId,
+      plays: [],
+    };
+  }
+  return { ok: true };
+}
+
+/** Advance the game past any left players (auto-bid 0 or auto-play first legal card). */
+export function advanceLeftPlayers(game: GameState): void {
+  for (;;) {
+    const currentTurnId = getCurrentTurn(game);
+    if (!currentTurnId) break;
+    const player = game.players.find((p) => p.playerId === currentTurnId);
+    if (!player || player.status !== "left") break;
+
+    if (game.phase === "bidding") {
+      const result = placeBidForCurrentBidder(game, 0);
+      if (!result.ok) break;
+      continue;
+    }
+    if (game.phase === "playing") {
+      const legalIds = getLegalCardIds(game, player);
+      const cardId = legalIds[0];
+      if (!cardId) break;
+      const result = playCardByPlayerId(game, player.playerId, cardId);
+      if (!result.ok) break;
+      continue;
+    }
+    break;
+  }
+}
+
+export function removePlayer(game: GameState, socketId: string): void {
+  const idx = game.players.findIndex((p) => p.id === socketId);
   if (idx === -1) return;
+  const { playerId } = game.players[idx];
   game.players.splice(idx, 1);
   if (game.hostId === playerId && game.players[0]) {
-    game.hostId = game.players[0].id;
+    game.hostId = game.players[0].playerId;
     game.players[0].isHost = true;
   }
 
@@ -372,4 +553,3 @@ export function removePlayer(game: GameState, playerId: string): void {
     game.statusMessage = "A player left. Returning to lobby.";
   }
 }
-

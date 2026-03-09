@@ -10,22 +10,32 @@ interface HandProps {
   canPlay: (cardId: string) => boolean;
 }
 
-export default function Hand({ game, isMyTurn, onPlayCard, canPlay }: HandProps) {
+const OFFSET = 34;
+
+export default function Hand({
+  game,
+  isMyTurn,
+  onPlayCard,
+  canPlay,
+}: HandProps) {
   const sortedHand = sortCards(game.hand);
 
   return (
     <div className="panel inner">
-      <div className="row spaced">
-        <h4>Your hand ({game.hand.length})</h4>
-        {isMyTurn ? <span className="pill turn">Your turn</span> : null}
-      </div>
+      {isMyTurn ? <span className="pill turn">Your turn</span> : null}
+
       <div className="hand">
         {game.hand.length === 0 ? (
           <p className="muted">No cards in hand.</p>
         ) : (
-          sortedHand.map((card) => (
+          sortedHand.map((card, index) => (
             <Card
               key={card.id}
+              style={{
+                left: index * OFFSET + "px",
+                zIndex: index,
+                position: "absolute",
+              }}
               card={card}
               onClick={() => onPlayCard(card.id)}
               disabled={!canPlay(card.id)}
@@ -36,4 +46,3 @@ export default function Hand({ game, isMyTurn, onPlayCard, canPlay }: HandProps)
     </div>
   );
 }
-

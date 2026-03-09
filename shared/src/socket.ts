@@ -3,7 +3,7 @@
  * @see https://socket.io/docs/v4/typescript
  */
 
-import type { GameStatePayload } from "./game";
+import type { GameStatePayload, GameId, PlayerId, CardId } from "./game";
 
 // --- Payloads (client → server) ---
 
@@ -14,32 +14,38 @@ export interface CreateGamePayload {
 }
 
 export interface JoinGamePayload {
-  gameId: string;
+  gameId: GameId;
   playerName?: string;
   /** Stable player id (from session storage) to rejoin after refresh */
-  playerId?: string;
+  playerId?: PlayerId;
 }
 
 export interface StartGamePayload {
-  gameId: string;
+  gameId: GameId;
 }
 
 export interface PlaceBidPayload {
-  gameId: string;
+  gameId: GameId;
   bid: number;
 }
 
 export interface PlayCardPayload {
-  gameId: string;
-  cardId: string;
+  gameId: GameId;
+  cardId: CardId;
 }
 
 export interface StartNextRoundPayload {
-  gameId: string;
+  gameId: GameId;
+}
+
+export interface KickPlayerPayload {
+  gameId: GameId;
+  /** Stable playerId of the player to kick */
+  playerId: PlayerId;
 }
 
 export interface RequestStatePayload {
-  gameId: string;
+  gameId: GameId;
 }
 
 // --- Responses (server → client via callback) ---
@@ -47,9 +53,9 @@ export interface RequestStatePayload {
 export interface GameResponse {
   ok: boolean;
   error?: string;
-  gameId?: string;
+  gameId?: GameId;
   /** Stable player id for this tab; save to session storage for rejoin */
-  playerId?: string;
+  playerId?: PlayerId;
 }
 
 export interface OkErrorResponse {
@@ -85,12 +91,18 @@ export interface ClientToServerEvents {
     payload: StartNextRoundPayload,
     callback?: (response: OkErrorResponse) => void
   ) => void;
+  kickPlayer: (
+    payload: KickPlayerPayload,
+    callback?: (response: OkErrorResponse) => void
+  ) => void;
   requestState: (payload: RequestStatePayload) => void;
 }
 
 /** Events the client listens for (server emits these) */
 export interface ServerToClientEvents {
   gameState: (state: GameStatePayload) => void;
+  /** Emitted to a socket when the host kicks them from the lobby */
+  kicked: (message?: string) => void;
 }
 
 /** Inter-server events (optional; not used in this app) */

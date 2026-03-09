@@ -4,9 +4,15 @@ export type {
   GamePhase,
   GameStatePayload,
   PublicPlayer,
+  PlayerStatus,
   Rank,
   Suit,
   TrickPlay,
+  GameOptions,
+  PlayerState,
+  GameState,
+  SerializedGame,
+  PlayerId,
 } from "./game";
 
 export type {
@@ -14,6 +20,7 @@ export type {
   CreateGamePayload,
   GameResponse,
   JoinGamePayload,
+  KickPlayerPayload,
   OkErrorResponse,
   PlaceBidPayload,
   PlayCardPayload,

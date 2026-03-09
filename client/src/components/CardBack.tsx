@@ -2,20 +2,20 @@ import "./CardBack.css";
 
 interface CardBackProps {
   size?: "small" | "medium" | "large";
-  /** Optional stack offset (e.g. index) for layered effect */
-  stackIndex?: number;
+  layered?: {
+    stackIndex: number;
+    spread: "vertical" | "horizontal";
+  };
 }
 
-export default function CardBack({ size = "medium", stackIndex = 0 }: CardBackProps) {
+export default function CardBack({ size = "medium", layered }: CardBackProps) {
+  const { spread, stackIndex = 0 } = layered || {};
+  const style: React.CSSProperties =
+    spread === "vertical"
+      ? { transform: `rotate(90deg) translateX(${stackIndex * -25.25}px)` }
+      : { transform: `translateX(${stackIndex * -15}px)` };
+
   return (
-    <div
-      className={`card-back card-back-${size}`}
-      style={
-        stackIndex
-          ? { transform: `translate(${stackIndex * 2}px, ${stackIndex * 2}px)` }
-          : undefined
-      }
-      aria-hidden
-    />
+    <div className={`card-back card-back-${size}`} style={style} aria-hidden />
   );
 }

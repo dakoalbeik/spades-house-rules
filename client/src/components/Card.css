@@ -14,11 +14,11 @@
   filter: brightness(1.1);
 }
 
-.card-btn:disabled {
+/* .card-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   filter: grayscale(0.3);
-}
+} */
 
 .card-btn:disabled:hover {
   transform: none;

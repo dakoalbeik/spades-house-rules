@@ -1,0 +1,35 @@
+import type { StartGamePayload, OkErrorResponse } from "shared";
+import { startRound } from "../gameLogic";
+import type { HandlerContext } from "./types";
+
+export function startGameHandler({
+  socket,
+  games,
+  broadcast,
+  persistGames,
+}: HandlerContext) {
+  return (payload: StartGamePayload, callback?: (r: OkErrorResponse) => void) => {
+    const game = games.get(payload?.gameId) ?? null;
+    if (!game) {
+      callback?.({ ok: false, error: "Game not found" });
+      return;
+    }
+    const hostPlayer = game.players.find((p) => p.id === socket.id);
+    if (!hostPlayer?.isHost) {
+      callback?.({ ok: false, error: "Only host can start" });
+      return;
+    }
+    if (game.phase !== "lobby" && game.phase !== "round_end") {
+      callback?.({ ok: false, error: "Game already in progress" });
+      return;
+    }
+    const result = startRound(game);
+    if (!result.ok) {
+      callback?.({ ok: false, error: result.error });
+      return;
+    }
+    broadcast(game);
+    persistGames();
+    callback?.({ ok: true });
+  };
+}

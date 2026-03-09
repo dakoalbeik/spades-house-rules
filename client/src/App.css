@@ -67,7 +67,9 @@ button {
   padding: 10px 14px;
   border-radius: 8px;
   font-weight: 600;
-  transition: transform 120ms ease, opacity 120ms ease;
+  transition:
+    transform 120ms ease,
+    opacity 120ms ease;
 }
 
 button:hover {
@@ -181,7 +183,9 @@ button:disabled,
   border: none;
   padding: 0;
   cursor: pointer;
-  transition: transform 0.2s, filter 0.2s;
+  transition:
+    transform 0.2s,
+    filter 0.2s;
 }
 
 .card-btn:hover:not(:disabled) {
