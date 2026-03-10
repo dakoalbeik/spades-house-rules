@@ -3,7 +3,7 @@
  * Keeps client and server in sync on the wire format.
  */
 
-import { Brand} from "./general";
+import { Brand } from "./general";
 
 export type PlayerId = Brand<string, "PlayerId">;
 export type GameId = Brand<string, "GameId">;
@@ -63,7 +63,7 @@ export interface PublicPlayer {
 
 /** Game state payload sent from server to client on "gameState" event */
 export interface GameStatePayload {
-  id: string;
+  id: GameId;
   phase: GamePhase;
   options: { numDecks: number; maxPlayers: number };
   players: PublicPlayer[];
@@ -108,7 +108,7 @@ export interface GameState {
 }
 
 export interface SerializedGame {
-  id: string;
+  id: GameId;
   phase: GamePhase;
   options: GameOptions;
   players: PublicPlayer[];

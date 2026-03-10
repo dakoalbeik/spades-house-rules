@@ -19,6 +19,7 @@ import ToastContainer from "./components/Toast";
 import LoadingScreen from "./components/LoadingScreen";
 import { useToast } from "./hooks/useToast";
 import "./App.css";
+import type { CardId, GameId, PlayerId } from "shared/dist/game";
 
 const serverUrl = "http://localhost:4000";
 
@@ -38,7 +39,7 @@ function App() {
     return s;
   }, []);
 
-  const [gameId, setGameId] = useState(() => getGameId() || "");
+  const [gameId, setGameId] = useState<GameId | "">(() => getGameId() || "");
   const [playerName, setPlayerName] = useState(() => getPlayerName() || "");
   const [numDecks, setNumDecks] = useState(1);
   const [maxPlayers, setMaxPlayers] = useState(4);
@@ -64,13 +65,19 @@ function App() {
     }
   }, [playerName]);
 
-  const handleError = useCallback((message?: string) => {
-    if (message) showError(message);
-  }, [showError]);
+  const handleError = useCallback(
+    (message?: string) => {
+      if (message) showError(message);
+    },
+    [showError],
+  );
 
-  const handleSuccess = useCallback((message: string) => {
-    showSuccess(message);
-  }, [showSuccess]);
+  const handleSuccess = useCallback(
+    (message: string) => {
+      showSuccess(message);
+    },
+    [showSuccess],
+  );
 
   // Socket event handlers
   useEffect(() => {
@@ -88,13 +95,12 @@ function App() {
       const savedPlayerName = getPlayerName();
       const savedPlayerId = getPlayerId();
 
-      if (savedGameId && savedPlayerId && !game) {
-        console.log(
-          "Attempting to rejoin game:",
-          savedGameId,
-          "playerId:",
-          savedPlayerId,
-        );
+      // Always rejoin via joinGame when we have saved credentials — this
+      // updates slot.id on the server so the player's hand is re-attached to
+      // the new socket. Skipping this (e.g. calling requestState instead)
+      // causes an empty hand because the server can't match the new socket.id
+      // to the player who has their cards.
+      if (savedGameId && savedPlayerId) {
         setIsRejoining(true);
         socket.emit(
           "joinGame",
@@ -107,18 +113,18 @@ function App() {
             setIsRejoining(false);
             if (!resp || !resp.ok) {
               console.log("Could not rejoin game:", resp?.error);
-              handleError(
-                resp?.error || "Could not rejoin game. It may have ended.",
-              );
+              // Only show error if the game actually ended; silent on minor reconnects
+              if (!game) {
+                handleError(
+                  resp?.error || "Could not rejoin game. It may have ended.",
+                );
+              }
               clearGameId();
               clearPlayerId();
-            } else {
-              handleSuccess("Rejoined game successfully!");
             }
           },
         );
       } else if (gameId) {
-        // Just request state for current game
         socket.emit("requestState", { gameId });
       }
     });
@@ -149,10 +155,10 @@ function App() {
   const myPlayer = game?.players.find((p) => p.isSelf);
 
   const handleGameIdChange = (id: string) => {
-    setGameId(id);
+    setGameId(id as GameId);
   };
 
-  const handleJoinedGame = useCallback((id: string, playerId: string) => {
+  const handleJoinedGame = useCallback((id: GameId, playerId: PlayerId) => {
     saveGameId(id);
     savePlayerId(playerId);
     setGameId(id);
@@ -178,7 +184,7 @@ function App() {
     });
   };
 
-  const handlePlay = (cardId: string) => {
+  const handlePlay = (cardId: CardId) => {
     if (!gameId) return;
     socket.emit("playCard", { gameId, cardId }, (resp) => {
       if (!resp?.ok) handleError(resp?.error);
@@ -192,9 +198,16 @@ function App() {
     });
   };
 
-  const handleKick = (playerId: string) => {
+  const handleKick = (playerId: PlayerId) => {
     if (!gameId) return;
     socket.emit("kickPlayer", { gameId, playerId }, (resp) => {
+      if (!resp?.ok) handleError(resp?.error);
+    });
+  };
+
+  const handleCancelRound = () => {
+    if (!gameId) return;
+    socket.emit("cancelRound", { gameId }, (resp) => {
       if (!resp?.ok) handleError(resp?.error);
     });
   };
@@ -220,7 +233,9 @@ function App() {
   };
 
   const isLoading = status === "Connecting..." || isRejoining;
-  const loadingMessage = isRejoining ? "Rejoining your game..." : "Connecting to server...";
+  const loadingMessage = isRejoining
+    ? "Rejoining your game..."
+    : "Connecting to server...";
 
   if (isLoading) {
     return <LoadingScreen message={loadingMessage} />;
@@ -263,6 +278,7 @@ function App() {
           canPlay={canPlay}
           onKick={handleKick}
           onLeave={handleLeave}
+          onCancelRound={handleCancelRound}
         />
       )}
     </div>

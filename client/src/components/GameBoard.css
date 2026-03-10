@@ -83,6 +83,15 @@
   background: #991b1b;
 }
 
+.btn-cancel-round {
+  background: #78350f;
+  color: #fef3c7;
+}
+
+.btn-cancel-round:hover {
+  background: #92400e;
+}
+
 .info {
   background: #0b3b4f;
   color: #cce8ff;

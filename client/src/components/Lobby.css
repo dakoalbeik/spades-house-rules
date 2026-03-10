@@ -1,73 +1,224 @@
-.panels {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 12px;
+/* ── Hero ────────────────────────────────────────────────────── */
+.lobby {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 }
 
-.panel {
+.lobby-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 0 4px;
+}
+
+.lobby-suits {
+  display: flex;
+  gap: 18px;
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.lobby-suits span:nth-child(1),
+.lobby-suits span:nth-child(4) {
+  color: #e2e8f0;
+}
+
+.lobby-suits span:nth-child(2),
+.lobby-suits span:nth-child(3) {
+  color: #f87171;
+}
+
+.lobby-tagline {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.38);
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+/* ── Panel layout ────────────────────────────────────────────── */
+.lobby-panels {
+  display: flex;
+  align-items: stretch;
   background: #0f172a;
-  border: 1px solid #1f2937;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
 
-.panel h3 {
-  margin: 0 0 12px 0;
+.lobby-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 28px 28px 24px;
+}
+
+/* ── Divider ─────────────────────────────────────────────────── */
+.lobby-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.07);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.lobby-divider span {
+  position: absolute;
+  background: #0f172a;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  padding: 6px 0;
+  writing-mode: vertical-rl;
+}
+
+/* ── Panel header ────────────────────────────────────────────── */
+.lobby-panel-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 700;
   color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
 
-.panel label {
-  display: block;
-  margin-bottom: 10px;
-  color: #cbd5e1;
-  font-size: 0.9em;
+.panel-icon {
+  font-size: 0.8rem;
+  color: #2563eb;
 }
 
-.panel input {
+/* ── Labels & inputs ─────────────────────────────────────────── */
+.lobby-label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.lobby-label input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  transition: border-color 150ms;
   width: 100%;
-  padding: 8px 10px;
-  margin-top: 4px;
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 6px;
-  color: #e2e8f0;
-  font-size: 0.95em;
   box-sizing: border-box;
 }
 
-.panel input:focus {
+.lobby-label input:focus {
   outline: none;
   border-color: #2563eb;
+  background: rgba(37, 99, 235, 0.06);
 }
 
-.two-col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+.gameid-input {
+  font-size: 1.1rem !important;
+  letter-spacing: 0.18em !important;
+  font-weight: 700 !important;
 }
 
-.panel button {
-  width: 100%;
-  margin-top: 8px;
-  padding: 10px;
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 1em;
+/* ── Segmented controls ──────────────────────────────────────── */
+.lobby-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lobby-field-label {
+  font-size: 0.78rem;
   font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.seg-ctrl {
+  display: flex;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.seg-btn {
+  /* reset global button styles */
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 7px 13px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.88rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 120ms, color 120ms;
+  transform: none !important;
 }
 
-.panel button:hover:not(:disabled) {
-  background: #1d4ed8;
+.seg-btn + .seg-btn {
+  border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-.panel button:disabled {
-  background: #475569;
-  cursor: not-allowed;
-  opacity: 0.6;
+.seg-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #e2e8f0;
 }
 
+.seg-btn.active {
+  background: #2563eb !important;
+  color: #fff;
+}
+
+/* ── Action button ───────────────────────────────────────────── */
+.lobby-btn {
+  margin-top: auto;
+  padding: 11px;
+  width: 100%;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.join-btn {
+  background: linear-gradient(90deg, #0f766e, #2563eb) !important;
+}
+
+.join-btn:disabled {
+  background: #334155 !important;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .lobby-panels {
+    flex-direction: column;
+  }
+
+  .lobby-divider {
+    width: auto;
+    height: 1px;
+  }
+
+  .lobby-divider span {
+    writing-mode: horizontal-tb;
+    padding: 0 8px;
+  }
+}

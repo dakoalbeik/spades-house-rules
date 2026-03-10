@@ -99,6 +99,10 @@ export interface ClientToServerEvents {
     payload: { gameId: string },
     callback?: (response: OkErrorResponse) => void
   ) => void;
+  cancelRound: (
+    payload: { gameId: string },
+    callback?: (response: OkErrorResponse) => void
+  ) => void;
   requestState: (payload: RequestStatePayload) => void;
 }
 

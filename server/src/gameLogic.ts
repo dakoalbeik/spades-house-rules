@@ -371,6 +371,24 @@ export function startNextRound(
   return startRound(game);
 }
 
+/** Cancel the current round without counting scores. Moves phase to round_end. */
+export function cancelRound(
+  game: GameState,
+): { ok: true } | { ok: false; error: string } {
+  if (game.phase !== "bidding" && game.phase !== "playing") {
+    return { ok: false, error: "No active round to cancel" };
+  }
+  for (const player of game.players) {
+    player.hand = [];
+    player.bid = undefined;
+    player.tricks = 0;
+  }
+  game.currentTrick = undefined;
+  game.phase = "round_end";
+  game.statusMessage = "Round dismissed by host — no scores counted.";
+  return { ok: true };
+}
+
 /** Mark a player as left (disconnected) but keep them in the game so they can rejoin. */
 export function setPlayerLeft(game: GameState, socketId: string): void {
   const player = game.players.find((p) => p.id === socketId);

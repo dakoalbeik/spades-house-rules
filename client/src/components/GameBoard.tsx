@@ -6,6 +6,8 @@ import GameTable from "./GameTable";
 import Hand from "./Hand";
 import ScoreModal from "./ScoreModal";
 import "./GameBoard.css";
+import type { PlayerId } from "shared";
+import type { CardId } from "shared/dist/game";
 
 interface GameBoardProps {
   game: GameState;
@@ -15,10 +17,11 @@ interface GameBoardProps {
   onBid: (bid: number) => void;
   onStart: () => void;
   onNextRound: () => void;
-  onPlayCard: (cardId: string) => void;
-  canPlay: (cardId: string) => boolean;
-  onKick?: (playerId: string) => void;
+  onPlayCard: (cardId: CardId) => void;
+  canPlay: (cardId: CardId) => boolean;
+  onKick?: (playerId: PlayerId) => void;
   onLeave?: () => void;
+  onCancelRound?: () => void;
 }
 
 export default function GameBoard({
@@ -31,6 +34,7 @@ export default function GameBoard({
   canPlay,
   onKick,
   onLeave,
+  onCancelRound,
 }: GameBoardProps) {
   const [showScores, setShowScores] = useState(false);
 
@@ -59,7 +63,10 @@ export default function GameBoard({
           </div>
           <div className="actions">
             {isActive && (
-              <button className="btn-scores" onClick={() => setShowScores(true)}>
+              <button
+                className="btn-scores"
+                onClick={() => setShowScores(true)}
+              >
                 Scores
               </button>
             )}
@@ -69,6 +76,13 @@ export default function GameBoard({
             {game.phase === "round_end" && myPlayer?.isHost && (
               <button onClick={onNextRound}>Start next round</button>
             )}
+            {(game.phase === "bidding" || game.phase === "playing") &&
+              myPlayer?.isHost &&
+              onCancelRound && (
+                <button className="btn-cancel-round" onClick={onCancelRound}>
+                  Dismiss round
+                </button>
+              )}
             {onLeave && (
               <button className="btn-leave" onClick={onLeave}>
                 Leave
@@ -76,9 +90,7 @@ export default function GameBoard({
             )}
           </div>
         </div>
-        {game.statusMessage && (
-          <div className="info">{game.statusMessage}</div>
-        )}
+        {game.statusMessage && <div className="info">{game.statusMessage}</div>}
       </div>
 
       {/* Main area */}
