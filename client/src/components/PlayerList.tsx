@@ -1,25 +1,12 @@
 import type { PlayerId } from "shared";
 import type { GameState } from "../types";
+import { avatarColor } from "../utils/avatarColor";
 import "./PlayerList.css";
 
 interface PlayerListProps {
   game: GameState;
   canKick?: boolean;
   onKick?: (playerId: PlayerId) => void;
-}
-
-const AVATAR_PALETTE = [
-  "#1d4ed8", "#0f766e", "#7e22ce",
-  "#b45309", "#be123c", "#0369a1",
-  "#15803d", "#b91c1c",
-];
-
-function avatarColor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
 }
 
 export default function PlayerList({ game, canKick, onKick }: PlayerListProps) {

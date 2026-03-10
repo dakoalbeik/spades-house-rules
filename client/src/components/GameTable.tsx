@@ -1,6 +1,7 @@
 import type { GameState, PublicPlayer } from "../types";
 import OpponentFan from "./OpponentFan";
 import TrickPile from "./TrickPile";
+import { avatarColor } from "../utils/avatarColor";
 import "./GameTable.css";
 
 type Area = "top" | "bot" | "left" | "right" | "center";
@@ -14,6 +15,12 @@ function getPositions(count: number): ("top" | "left" | "right")[] {
   if (count === 1) return ["top"];
   if (count === 2) return ["left", "right"];
   return ["left", "top", "right"];
+}
+
+function SeatRatio({ phase, bid, tricks }: { phase: string; bid: number | undefined; tricks: number }) {
+  if (bid == null) return null;
+  if (phase === "bidding") return <span className="seat-ratio">bid {bid}</span>;
+  return <span className="seat-ratio">{tricks}/{bid}</span>;
 }
 
 export default function GameTable({ game, myPlayer }: GameTableProps) {
@@ -69,10 +76,11 @@ export default function GameTable({ game, myPlayer }: GameTableProps) {
               )}
 
               <div className="seat-label">
+                <div className="seat-avatar" style={{ background: avatarColor(opp.name) }}>
+                  {opp.name.trim()[0]?.toUpperCase() ?? "?"}
+                </div>
                 <span className="seat-name">{opp.name}</span>
-                {opp.bid != null && (
-                  <span className="seat-ratio">{opp.tricks}/{opp.bid}</span>
-                )}
+                <SeatRatio phase={game.phase} bid={opp.bid} tricks={opp.tricks} />
                 {opp.isHost && <span className="host-badge">Host</span>}
                 {opp.status === "left" && <span className="left-badge">Left</span>}
               </div>
@@ -104,15 +112,16 @@ export default function GameTable({ game, myPlayer }: GameTableProps) {
         >
           {players[0] && (
             <div className="seat-label">
+              <div className="seat-avatar" style={{ background: avatarColor(players[0].name) }}>
+                {players[0].name.trim()[0]?.toUpperCase() ?? "?"}
+              </div>
               <span className="seat-name">
                 {players[0].name}
                 {myPlayer?.playerId === players[0].playerId && (
                   <span className="you-label"> (You)</span>
                 )}
               </span>
-              {players[0].bid != null && (
-                <span className="seat-ratio">{players[0].tricks}/{players[0].bid}</span>
-              )}
+              <SeatRatio phase={game.phase} bid={players[0].bid} tricks={players[0].tricks} />
               {players[0].isHost && <span className="host-badge">Host</span>}
               {players[0].status === "left" && <span className="left-badge">Left</span>}
             </div>

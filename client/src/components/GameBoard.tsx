@@ -12,8 +12,6 @@ import type { CardId } from "shared/dist/game";
 interface GameBoardProps {
   game: GameState;
   myPlayer: PublicPlayer | undefined;
-  bidInput: string;
-  onBidInputChange: (bid: string) => void;
   onBid: (bid: number) => void;
   onStart: () => void;
   onNextRound: () => void;

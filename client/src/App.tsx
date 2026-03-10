@@ -44,7 +44,6 @@ function App() {
   const [numDecks, setNumDecks] = useState(1);
   const [maxPlayers, setMaxPlayers] = useState(4);
   const [game, setGame] = useState<GameState | null>(null);
-  const [bidInput, setBidInput] = useState("");
   const { toasts, dismiss, showError, showSuccess } = useToast();
   const [status, setStatus] = useState("Connecting...");
   const [isJoining, setIsJoining] = useState(false);
@@ -175,12 +174,10 @@ function App() {
     });
   };
 
-  const handleBid = () => {
+  const handleBid = (bid: number) => {
     if (!gameId) return;
-    const bid = Number(bidInput);
     socket.emit("placeBid", { gameId, bid }, (resp) => {
       if (!resp?.ok) handleError(resp?.error);
-      else setBidInput("");
     });
   };
 
@@ -269,8 +266,6 @@ function App() {
         <GameBoard
           game={game}
           myPlayer={myPlayer}
-          bidInput={bidInput}
-          onBidInputChange={setBidInput}
           onBid={handleBid}
           onStart={handleStart}
           onNextRound={handleNextRound}
