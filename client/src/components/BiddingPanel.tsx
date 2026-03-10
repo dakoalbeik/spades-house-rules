@@ -14,27 +14,23 @@ export default function BiddingPanel({
   hand,
   onBid,
 }: BiddingPanelProps) {
-  if (game.phase !== "bidding" || !myPlayer) {
-    return null;
-  }
+  if (game.phase !== "bidding" || !myPlayer) return null;
+
+  // Only show the picker during this player's own bidding turn
+  if (myPlayer.playerId !== game.currentTurnPlayerId) return null;
 
   return (
-    <div className="panel inner">
-      <div className="row spaced">
-        <div>
-          <h4>Bidding</h4>
-          <p className="muted">Bid how many tricks you expect to take.</p>
-        </div>
-        <div className="row gap">
-          {hand.map((card, index) => {
-            const bid = index + 1;
-            return (
-              <button key={card.id} onClick={() => onBid(bid)}>
-                {bid}
-              </button>
-            );
-          })}
-        </div>
+    <div className="bid-panel">
+      <span className="bid-label">Your bid</span>
+      <div className="bid-options">
+        {hand.map((card, index) => {
+          const bid = index + 1;
+          return (
+            <button key={card.id} className="bid-btn" onClick={() => onBid(bid)}>
+              {bid}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

@@ -1,0 +1,131 @@
+/* ── Container ───────────────────────────────────────────────────
+   Card "small" = 60px wide × ~84px tall.
+   Cards overlap slightly toward the center.
+   Container is tall enough to prevent vertical clip.          */
+.trick-pile {
+  position: relative;
+  width: 130px;
+  height: 180px;
+  flex-shrink: 0;
+}
+
+.trick-pile-card {
+  position: absolute;
+}
+
+/* ── Static positions ────────────────────────────────────────── */
+
+/* top/bot: centered horizontally, 10px from edge → 8px overlap */
+.trick-pile-card-top {
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.trick-pile-card-bot {
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* left/right: centered vertically, 10px from edge → 10px overlap */
+.trick-pile-card-left {
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.trick-pile-card-right {
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* fallback: dead center */
+.trick-pile-card-center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* ── Fly-in animations ───────────────────────────────────────── */
+
+.trick-pile-card-top {
+  animation: trick-from-top 0.28s ease-out both;
+}
+
+.trick-pile-card-bot {
+  animation: trick-from-bot 0.28s ease-out both;
+}
+
+.trick-pile-card-left {
+  animation: trick-from-left 0.28s ease-out both;
+}
+
+.trick-pile-card-right {
+  animation: trick-from-right 0.28s ease-out both;
+}
+
+.trick-pile-card-center {
+  animation: trick-from-center 0.28s ease-out both;
+}
+
+@keyframes trick-from-top {
+  from {
+    transform: translateX(-50%) translateY(-90px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes trick-from-bot {
+  from {
+    transform: translateX(-50%) translateY(90px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes trick-from-left {
+  from {
+    transform: translateX(-90px) translateY(-50%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) translateY(-50%);
+    opacity: 1;
+  }
+}
+
+@keyframes trick-from-right {
+  from {
+    transform: translateX(90px) translateY(-50%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) translateY(-50%);
+    opacity: 1;
+  }
+}
+
+@keyframes trick-from-center {
+  from {
+    transform: translate(-50%, -50%) scale(0.75);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+/* ── Shadow on each trick card ───────────────────────────────── */
+.trick-pile-card .card-image {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}

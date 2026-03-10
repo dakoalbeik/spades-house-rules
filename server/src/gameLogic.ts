@@ -11,6 +11,7 @@ import type {
   Suit,
   PlayerId,
 } from "shared";
+import { CardId, GameId } from "shared/dist/game";
 
 const DEFAULT_STATUS: "active" = "active";
 
@@ -51,12 +52,16 @@ export const MAX_PLAYERS = 6;
 export const MIN_DECKS = 1;
 export const MAX_DECKS = 3;
 
-export function generateGameId(): string {
+export function generateGameId(): GameId {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   return Array.from(
     { length: 6 },
     () => alphabet[Math.floor(Math.random() * alphabet.length)],
-  ).join("");
+  ).join("") as GameId;
+}
+
+function generateCardId(deckIndex: number, rank: Rank, suit: Suit): CardId {
+  return `${deckIndex}-${rank}-${suit}-${randomUUID().slice(0, 8)}` as CardId;
 }
 
 function buildDeck(numDecks: number): Card[] {
@@ -65,7 +70,7 @@ function buildDeck(numDecks: number): Card[] {
     for (const suit of suits) {
       for (const rank of ranks) {
         cards.push({
-          id: `${deckIndex}-${rank}-${suit}-${randomUUID().slice(0, 8)}`,
+          id: generateCardId(deckIndex, rank, suit),
           suit,
           rank,
           deckIndex,
@@ -291,7 +296,7 @@ export function playCard(
   game: GameState,
   socketId: string,
   cardId: string,
-): { ok: true } | { ok: false; error: string } {
+): { ok: true; trickComplete: boolean } | { ok: false; error: string } {
   if (game.phase !== "playing" || !game.currentTrick)
     return { ok: false, error: "Not in play phase" };
 
@@ -335,27 +340,26 @@ export function playCard(
     game.spadesBroken = true;
   }
 
-  if (game.currentTrick.plays.length === game.players.length) {
-    const winnerId = determineTrickWinner(game.currentTrick);
-    const winner = game.players.find((p) => p.playerId === winnerId);
-    if (winner) {
-      winner.tricks += 1;
-      game.statusMessage = `${winner.name} won the trick`;
-    }
+  const trickComplete =
+    game.currentTrick.plays.length === game.players.length;
+  return { ok: true, trickComplete };
+}
 
-    const handsEmpty = game.players.every((p) => p.hand.length === 0);
-    if (handsEmpty) {
-      scoreRound(game);
-      return { ok: true };
-    }
-
-    game.currentTrick = {
-      leaderId: winnerId,
-      plays: [],
-    };
+/** Resolve the completed trick: award it, then start the next trick or score the round. */
+export function finalizeTrick(game: GameState): void {
+  if (!game.currentTrick || game.currentTrick.plays.length === 0) return;
+  const winnerId = determineTrickWinner(game.currentTrick);
+  const winner = game.players.find((p) => p.playerId === winnerId);
+  if (winner) {
+    winner.tricks += 1;
+    game.statusMessage = `${winner.name} won the trick`;
   }
-
-  return { ok: true };
+  const handsEmpty = game.players.every((p) => p.hand.length === 0);
+  if (handsEmpty) {
+    scoreRound(game);
+    return;
+  }
+  game.currentTrick = { leaderId: winnerId, plays: [] };
 }
 
 export function startNextRound(

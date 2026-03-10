@@ -1,0 +1,33 @@
+.opp-fan {
+  position: relative;
+  width: 44px;
+  height: 62px;
+  flex-shrink: 0;
+}
+
+.opp-fan-card {
+  position: absolute;
+  width: 68px;
+  aspect-ratio: 5 / 7;
+  left: 0;
+  bottom: 0;
+  transform-origin: bottom center;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 50%, #1e3a5f 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.13);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+}
+
+.opp-fan-card::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    rgba(255, 255, 255, 0.04) 3px,
+    rgba(255, 255, 255, 0.04) 4px
+  );
+}

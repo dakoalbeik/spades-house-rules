@@ -7,6 +7,15 @@
   gap: 16px;
 }
 
+/* Full-viewport layout when a game is active — no scroll */
+.page-ingame {
+  max-width: 100%;
+  padding: 12px 20px 0;
+  gap: 8px;
+  height: 100svh;
+  overflow: hidden;
+}
+
 .error,
 .success {
   padding: 10px 12px;
@@ -59,7 +68,7 @@ input {
   color: #e2e8f0;
 }
 
-button {
+button:not(.card-btn) {
   cursor: pointer;
   border: none;
   background: linear-gradient(90deg, #2563eb, #22c55e);
@@ -72,12 +81,11 @@ button {
     opacity 120ms ease;
 }
 
-button:hover {
+button:not(.card-btn):hover {
   transform: translateY(-1px);
 }
 
-button:disabled,
-.card-btn.disabled {
+button:not(.card-btn):disabled {
   opacity: 0.6;
   cursor: not-allowed;
   background: #334155;
@@ -194,9 +202,7 @@ button:disabled,
 }
 
 .card-btn:disabled {
-  opacity: 0.5;
   cursor: not-allowed;
-  filter: grayscale(0.3);
 }
 
 .card-btn:disabled:hover {

@@ -1,18 +1,43 @@
-.panel.inner {
-  margin-top: 12px;
-}
-
-.row {
+.bid-panel {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
-.row.spaced {
-  justify-content: space-between;
+.bid-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.row.gap {
-  gap: 8px;
+.bid-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
+.bid-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0 !important;
+  border-radius: 50%;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bid-btn:hover {
+  background: #2563eb;
+  border-color: transparent;
+  transform: translateY(-2px);
+}

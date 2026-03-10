@@ -1,131 +1,76 @@
 .game-table {
-  --table-cloth: #0d5c2e;
-  --table-border: #0a3d20;
-  --table-highlight: rgba(255, 255, 255, 0.06);
-  margin: 16px 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .table-surface {
+  flex: 1;
   display: grid;
-  grid-template-columns: 1fr minmax(200px, 320px) 1fr;
-  grid-template-rows: 1fr minmax(160px, 200px) 1fr;
-  gap: 0;
-  min-height: 420px;
-  background: radial-gradient(
-    ellipse 90% 85% at 50% 50%,
-    var(--table-cloth),
-    var(--table-border)
-  );
-  border-radius: 50%;
-  border: 8px solid var(--table-border);
+  grid-template-columns: minmax(150px, 200px) 1fr minmax(150px, 200px);
+  grid-template-rows: minmax(170px, 240px) minmax(170px, 1fr) minmax(
+      80px,
+      100px
+    );
+  background: radial-gradient(ellipse 92% 88% at 50% 48%, #0e6932, #0a3d20);
+  border-radius: 45% / 38%;
+  border: 8px solid #061d10;
   box-shadow:
-    inset 0 0 60px var(--table-highlight),
-    0 8px 24px rgba(0, 0, 0, 0.4);
-  padding: 20px;
+    inset 0 0 100px rgba(0, 0, 0, 0.25),
+    inset 0 0 40px rgba(255, 255, 255, 0.03),
+    0 12px 40px rgba(0, 0, 0, 0.6);
+  overflow: visible;
   position: relative;
 }
 
+/* ── Seat base ───────────────────────────────────────────────── */
 .table-seat {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 8px;
+  gap: 32px;
+  overflow: visible;
 }
 
-.table-seat-opponent {
-}
-
+/* Top opponent */
 .table-seat-top {
   grid-column: 2;
   grid-row: 1;
+  gap: 4rem;
+  flex-direction: column-reverse;
   justify-content: flex-end;
+  padding-top: 3rem;
 }
 
+/* Left opponent: [info] [fan→] */
 .table-seat-left {
   grid-column: 1;
   grid-row: 2;
   flex-direction: row;
   justify-content: flex-end;
-  align-items: center;
+  padding-right: 4px;
 }
 
+/* Right opponent: [←fan] [info] */
 .table-seat-right {
   grid-column: 3;
   grid-row: 2;
   flex-direction: row;
   justify-content: flex-start;
-  align-items: center;
+  padding-left: 4px;
 }
 
+/* Bottom (me) */
 .table-seat-bottom {
   grid-column: 2;
   grid-row: 3;
-  justify-content: flex-start;
-}
-
-.table-seat-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.table-seat-name {
-  font-weight: 600;
-  color: #e2e8f0;
-  font-size: 0.95rem;
-}
-
-.table-seat-meta {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.table-seat-cards {
-  font-size: 0.8rem;
-  color: #94a3b8;
-}
-
-.you-label {
-  font-weight: 500;
-  color: #93c5fd;
-}
-
-.table-seat-backs {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  min-height: 54px;
-  min-width: 44px;
-}
-
-.table-seat-top .table-seat-backs,
-.table-seat-bottom .table-seat-backs {
-  flex-direction: row;
-}
-
-.table-seat-left .table-seat-backs,
-.table-seat-right .table-seat-backs {
   flex-direction: column;
+  justify-content: flex-start;
+  padding-top: 8px;
 }
 
-.table-seat-extra {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.8);
-  align-self: center;
-  margin-left: 4px;
-}
-
-.table-seat-left .table-seat-extra,
-.table-seat-right .table-seat-extra {
-  margin-left: 0;
-  margin-top: 4px;
-}
-
+/* ── Center / trick area ─────────────────────────────────────── */
 .table-center {
   grid-column: 2;
   grid-row: 2;
@@ -133,56 +78,66 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 12px;
 }
 
-/* Trick card placed in front of each seat */
-.trick-slot-at-seat {
+/* ── Compact seat label ──────────────────────────────────────── */
+.seat-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: nowrap;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 3px 9px 3px 8px;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.seat-name {
+  font-weight: 600;
+  color: #e2e8f0;
+  font-size: 0.8rem;
+}
+
+.seat-ratio {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #93c5fd;
+  letter-spacing: 0.02em;
+}
+
+.you-label {
+  color: #93c5fd;
+  font-weight: 500;
+}
+
+/* ── Fan wrapper ─────────────────────────────────────────────── */
+.seat-fan-wrap {
+  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.trick-slot-at-seat.trick-slot-bottom {
-  align-self: center;
-  margin-bottom: 4px;
+/* ── Active turn ─────────────────────────────────────────────── */
+.table-seat.current-turn .seat-label {
+  box-shadow: 0 0 0 2px #3b82f6;
+  background: rgba(37, 99, 235, 0.22);
 }
 
-.trick-slot-at-seat.trick-slot-top {
-  align-self: center;
-  margin-top: 4px;
-  order: 1; /* appear below name/backs, toward center */
-}
-
-.trick-slot-at-seat.trick-slot-left {
-  align-self: center;
-  margin-right: 8px;
-  order: 1; /* appear to the right of name/backs, toward center */
-}
-
-.trick-slot-at-seat.trick-slot-right {
-  align-self: center;
-  margin-left: 8px;
-}
-
-.trick-slot-at-seat .card-image-small {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-}
-
-.table-seat.current-turn .table-seat-info {
-  box-shadow: 0 0 0 2px #2563eb;
-  border-radius: 8px;
-  padding: 4px 8px;
-}
-
-.table-seat-bottom.self-seat .table-seat-info {
-  border-color: rgba(37, 99, 235, 0.5);
-}
-
+/* ── Badges ─────────────────────────────────────────────────── */
 .host-badge {
   background: #22c55e;
   color: #064e3b;
-  font-size: 0.7rem;
-  padding: 2px 6px;
+  font-size: 0.62rem;
+  padding: 1px 6px;
+}
+
+.left-badge {
+  background: #92400e;
+  color: #fef3c7;
+  font-size: 0.62rem;
+  padding: 1px 6px;
 }

@@ -26,6 +26,7 @@ import { playCardHandler } from "./handlers/playCard";
 import { startNextRoundHandler } from "./handlers/startNextRound";
 import { requestStateHandler } from "./handlers/requestState";
 import { kickPlayerHandler } from "./handlers/kickPlayer";
+import { leaveGameHandler } from "./handlers/leaveGame";
 import { disconnectHandler } from "./handlers/disconnect";
 import type { HandlerContext } from "./handlers/types";
 
@@ -118,6 +119,7 @@ io.on(
     socket.on("startNextRound", startNextRoundHandler(ctx));
     socket.on("requestState", requestStateHandler(ctx));
     socket.on("kickPlayer", kickPlayerHandler(ctx));
+    socket.on("leaveGame", leaveGameHandler(ctx));
     socket.on("disconnect", disconnectHandler(ctx));
     socket.on("disconnect", () => {
       // eslint-disable-next-line no-console

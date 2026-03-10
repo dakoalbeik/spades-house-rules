@@ -1,0 +1,129 @@
+.score-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.score-modal {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+  width: min(460px, 92vw);
+  overflow: hidden;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.score-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.score-modal-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #e2e8f0;
+  flex: 1;
+}
+
+.score-modal-round {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.score-modal-close {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  transition: color 120ms, background 120ms;
+}
+
+.score-modal-close:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.08);
+  transform: none; /* override global button hover */
+}
+
+/* ── Table ───────────────────────────────────────────────────── */
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.score-table thead tr {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.score-table th {
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: left;
+}
+
+.score-table td {
+  padding: 10px 16px;
+  color: #cbd5e1;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.score-table th.col-num,
+.score-table td.col-num {
+  text-align: center;
+  width: 60px;
+}
+
+.score-table .row-self td {
+  background: rgba(37, 99, 235, 0.08);
+  color: #e2e8f0;
+}
+
+.score-value {
+  font-weight: 700;
+  color: #93c5fd !important;
+}
+
+/* ── Chips ───────────────────────────────────────────────────── */
+.you-chip,
+.host-chip,
+.left-chip {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 999px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.you-chip {
+  background: rgba(37, 99, 235, 0.25);
+  color: #93c5fd;
+}
+
+.host-chip {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}
+
+.left-chip {
+  background: rgba(146, 64, 14, 0.3);
+  color: #fcd34d;
+}

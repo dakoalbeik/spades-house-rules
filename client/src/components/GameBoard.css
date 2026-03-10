@@ -1,15 +1,62 @@
-.panel.wide {
+.game-board {
   width: 100%;
 }
 
+/* Full-height layout while a game is in progress */
+.game-board-active {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0; /* allow shrinking within the fixed-height page */
+  overflow: hidden;
+}
+
+.game-board-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 0 8px;
+  flex-shrink: 0;
+}
+
+/* Table area grows to fill available space */
+.game-board-play-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
+  overflow: visible;
+}
+
+/* Hand + bidding panel pinned to bottom of viewport while scrolling */
+.game-board-footer {
+  position: sticky;
+  bottom: 0;
+  background: #090e18;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 10px 0 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 20;
+  flex-shrink: 0;
+}
+
+/* ── Utility classes (scoped to board) ─────────────────────── */
 .row {
   display: flex;
   align-items: center;
-  gap: 8px;
 }
 
 .row.spaced {
   justify-content: space-between;
+  gap: 12px;
+}
+
+.row.gap {
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .actions {
@@ -17,26 +64,28 @@
   gap: 8px;
 }
 
-.info,
-.error,
-.success {
-  margin-top: 8px;
-  padding: 10px 12px;
-  border-radius: 10px;
+.btn-scores {
+  background: #1e293b;
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-scores:hover {
+  background: #334155;
+}
+
+.btn-leave {
+  background: #7f1d1d;
+  color: #fecaca;
+}
+
+.btn-leave:hover {
+  background: #991b1b;
 }
 
 .info {
   background: #0b3b4f;
   color: #cce8ff;
+  padding: 8px 12px;
+  border-radius: 10px;
 }
-
-.error {
-  background: #4c0519;
-  color: #fecdd3;
-}
-
-.success {
-  background: #064e3b;
-  color: #a7f3d0;
-}
-

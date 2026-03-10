@@ -95,6 +95,10 @@ export interface ClientToServerEvents {
     payload: KickPlayerPayload,
     callback?: (response: OkErrorResponse) => void
   ) => void;
+  leaveGame: (
+    payload: { gameId: string },
+    callback?: (response: OkErrorResponse) => void
+  ) => void;
   requestState: (payload: RequestStatePayload) => void;
 }
 

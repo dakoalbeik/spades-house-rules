@@ -15,6 +15,9 @@ import {
 import Header from "./components/Header";
 import Lobby from "./components/Lobby";
 import GameBoard from "./components/GameBoard";
+import ToastContainer from "./components/Toast";
+import LoadingScreen from "./components/LoadingScreen";
+import { useToast } from "./hooks/useToast";
 import "./App.css";
 
 const serverUrl = "http://localhost:4000";
@@ -35,15 +38,13 @@ function App() {
     return s;
   }, []);
 
-  const [socketId, setSocketId] = useState("");
   const [gameId, setGameId] = useState(() => getGameId() || "");
   const [playerName, setPlayerName] = useState(() => getPlayerName() || "");
   const [numDecks, setNumDecks] = useState(1);
   const [maxPlayers, setMaxPlayers] = useState(4);
   const [game, setGame] = useState<GameState | null>(null);
   const [bidInput, setBidInput] = useState("");
-  const [lastError, setLastError] = useState<string | null>(null);
-  const [lastSuccess, setLastSuccess] = useState<string | null>(null);
+  const { toasts, dismiss, showError, showSuccess } = useToast();
   const [status, setStatus] = useState("Connecting...");
   const [isJoining, setIsJoining] = useState(false);
   const [isRejoining, setIsRejoining] = useState(false);
@@ -64,16 +65,12 @@ function App() {
   }, [playerName]);
 
   const handleError = useCallback((message?: string) => {
-    setLastError(message ?? null);
-    if (message) {
-      setTimeout(() => setLastError(null), 3500);
-    }
-  }, []);
+    if (message) showError(message);
+  }, [showError]);
 
   const handleSuccess = useCallback((message: string) => {
-    setLastSuccess(message);
-    setTimeout(() => setLastSuccess(null), 3000);
-  }, []);
+    showSuccess(message);
+  }, [showSuccess]);
 
   // Socket event handlers
   useEffect(() => {
@@ -84,8 +81,6 @@ function App() {
     }
 
     socket.on("connect", () => {
-      const newSocketId = socket.id ?? "";
-      setSocketId(newSocketId);
       setStatus("Connected");
 
       // Rejoin by gameId + playerId (session storage) so this tab recovers after refresh
@@ -204,24 +199,38 @@ function App() {
     });
   };
 
+  const handleLeave = () => {
+    if (!gameId) return;
+    socket.emit("leaveGame", { gameId }, (resp) => {
+      if (!resp?.ok) {
+        handleError(resp?.error);
+        return;
+      }
+      setGame(null);
+      setGameId("");
+      clearGameId();
+      clearPlayerId();
+    });
+  };
+
   const canPlay = (cardId: string) => {
     if (!game || game.phase !== "playing") return false;
     const isMyTurn = myPlayer?.playerId === game.currentTurnPlayerId;
     return isMyTurn && !!game.hand.find((c) => c.id === cardId);
   };
 
+  const isLoading = status === "Connecting..." || isRejoining;
+  const loadingMessage = isRejoining ? "Rejoining your game..." : "Connecting to server...";
+
+  if (isLoading) {
+    return <LoadingScreen message={loadingMessage} />;
+  }
+
   return (
-    <div className="page">
+    <div className={`page ${game ? "page-ingame" : ""}`}>
       <Header status={status} playerName={playerName} gameId={gameId} />
 
-      {isRejoining && (
-        <div className="info" style={{ margin: "12px 0" }}>
-          Rejoining game...
-        </div>
-      )}
-
-      {lastError ? <div className="error">{lastError}</div> : null}
-      {lastSuccess ? <div className="success">{lastSuccess}</div> : null}
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
 
       {!game ? (
         <Lobby
@@ -245,7 +254,6 @@ function App() {
         <GameBoard
           game={game}
           myPlayer={myPlayer}
-          socketId={socketId}
           bidInput={bidInput}
           onBidInputChange={setBidInput}
           onBid={handleBid}
@@ -254,6 +262,7 @@ function App() {
           onPlayCard={handlePlay}
           canPlay={canPlay}
           onKick={handleKick}
+          onLeave={handleLeave}
         />
       )}
     </div>
