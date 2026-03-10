@@ -92,9 +92,80 @@
   background: #92400e;
 }
 
+.btn-end-game {
+  background: #7f1d1d;
+  color: #fecaca;
+}
+
+.btn-end-game:hover {
+  background: #991b1b;
+}
+
 .info {
   background: #0b3b4f;
   color: #cce8ff;
   padding: 8px 12px;
   border-radius: 10px;
+}
+
+.duplicate-choice-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.duplicate-choice-modal {
+  background: #0f2233;
+  border: 1px solid #1e4060;
+  border-radius: 14px;
+  padding: 28px 32px;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.duplicate-choice-title {
+  color: #cce8ff;
+  font-size: 1rem;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.duplicate-choice-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-win {
+  background: #166534;
+  color: #bbf7d0;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.btn-win:hover {
+  background: #15803d;
+}
+
+.btn-lose {
+  background: #7f1d1d;
+  color: #fecaca;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.btn-lose:hover {
+  background: #991b1b;
 }

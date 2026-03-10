@@ -10,6 +10,7 @@ import type {
   SerializedGame,
   Suit,
   PlayerId,
+  TrickPlay,
 } from "shared";
 import { CardId, GameId } from "shared/dist/game";
 
@@ -106,6 +107,10 @@ function getPlayOrder(game: GameState): PlayerId[] {
 }
 
 export function getCurrentTurn(game: GameState): PlayerId | null {
+  // While waiting for a duplicate-card choice, that player "holds" the turn
+  if (game.pendingDuplicateChoice) {
+    return game.pendingDuplicateChoice.playerId;
+  }
   if (game.phase === "bidding") {
     return game.players[game.bidIndex]?.playerId ?? null;
   }
@@ -116,13 +121,32 @@ export function getCurrentTurn(game: GameState): PlayerId | null {
   return null;
 }
 
-function determineTrickWinner(trick: CurrentTrick): PlayerId {
+function determineTrickWinner(
+  trick: CurrentTrick,
+  duplicateOverride?: { lastDuplicatePlayerId: PlayerId; choice: "win" | "lose" },
+): PlayerId {
   const leadSuit = trick.leadSuit ?? trick.plays[0]?.card.suit;
   let winning = trick.plays[0];
   for (let i = 1; i < trick.plays.length; i += 1) {
     const play = trick.plays[i];
     const winningCard = winning.card;
     const card = play.card;
+
+    // Duplicate card tie-break: same rank+suit as the current winner
+    if (
+      duplicateOverride &&
+      card.rank === winningCard.rank &&
+      card.suit === winningCard.suit
+    ) {
+      if (
+        duplicateOverride.choice === "win" &&
+        play.playerId === duplicateOverride.lastDuplicatePlayerId
+      ) {
+        winning = play;
+      }
+      // choice === "lose": keep current winner (first duplicate stays)
+      continue;
+    }
 
     if (card.suit === "spades" && winningCard.suit !== "spades") {
       winning = play;
@@ -158,6 +182,21 @@ function scoreRound(game: GameState): void {
   game.statusMessage = `Round ${game.roundNumber} finished`;
 }
 
+const SUIT_ORDER: Record<string, number> = {
+  spades: 0,
+  hearts: 1,
+  clubs: 2,
+  diamonds: 3,
+};
+
+function sortHand(hand: Card[]): Card[] {
+  return [...hand].sort((a, b) => {
+    const suitDiff = SUIT_ORDER[a.suit] - SUIT_ORDER[b.suit];
+    if (suitDiff !== 0) return suitDiff;
+    return rankStrength[b.rank] - rankStrength[a.rank]; // high to low within suit
+  });
+}
+
 export function serializeGame(
   game: GameState,
   viewerId: string,
@@ -177,7 +216,8 @@ export function serializeGame(
     currentTrick: game.currentTrick,
     statusMessage: game.statusMessage,
     currentTurnPlayerId: currentTurn,
-    hand: viewer?.hand ?? [],
+    pendingDuplicateChoice: game.pendingDuplicateChoice,
+    hand: viewer ? sortHand(viewer.hand) : [],
     players: orderedPlayers.map((p) => ({
       id: p.id,
       playerId: p.playerId,
@@ -296,7 +336,7 @@ export function playCard(
   game: GameState,
   socketId: string,
   cardId: string,
-): { ok: true; trickComplete: boolean } | { ok: false; error: string } {
+): { ok: true; trickComplete: boolean; pendingDuplicateChoice: boolean } | { ok: false; error: string } {
   if (game.phase !== "playing" || !game.currentTrick)
     return { ok: false, error: "Not in play phase" };
 
@@ -342,13 +382,41 @@ export function playCard(
 
   const trickComplete =
     game.currentTrick.plays.length === game.players.length;
-  return { ok: true, trickComplete };
+
+  // Check immediately if this card duplicates an earlier play in the trick
+  const lastPlay = game.currentTrick.plays[game.currentTrick.plays.length - 1];
+  const hasPriorDuplicate = game.currentTrick.plays
+    .slice(0, -1)
+    .some(
+      (p) =>
+        p.card.rank === lastPlay.card.rank && p.card.suit === lastPlay.card.suit,
+    );
+
+  if (hasPriorDuplicate && isDuplicatePairCompetitive(game.currentTrick, lastPlay)) {
+    game.pendingDuplicateChoice = { playerId: player.playerId, card };
+    game.statusMessage = `${player.name} played a duplicate — choose to win or lose the trick`;
+    return { ok: true, trickComplete, pendingDuplicateChoice: true };
+  }
+
+  return { ok: true, trickComplete, pendingDuplicateChoice: false };
 }
 
-/** Resolve the completed trick: award it, then start the next trick or score the round. */
-export function finalizeTrick(game: GameState): void {
-  if (!game.currentTrick || game.currentTrick.plays.length === 0) return;
-  const winnerId = determineTrickWinner(game.currentTrick);
+/** Returns true if the duplicate pair could win the trick (i.e. nothing else beats them). */
+function isDuplicatePairCompetitive(trick: CurrentTrick, lastPlay: TrickPlay): boolean {
+  // Build a fake trick without the last duplicate; check if the first instance wins
+  const fakeTrick: CurrentTrick = {
+    ...trick,
+    plays: trick.plays.filter((p) => p !== lastPlay),
+  };
+  const winner = determineTrickWinner(fakeTrick);
+  return (
+    fakeTrick.plays.find((p) => p.playerId === winner)?.card.rank === lastPlay.card.rank &&
+    fakeTrick.plays.find((p) => p.playerId === winner)?.card.suit === lastPlay.card.suit
+  );
+}
+
+/** Apply a known winner to the current trick and advance game state. */
+function applyTrickWinner(game: GameState, winnerId: PlayerId): void {
   const winner = game.players.find((p) => p.playerId === winnerId);
   if (winner) {
     winner.tricks += 1;
@@ -360,6 +428,44 @@ export function finalizeTrick(game: GameState): void {
     return;
   }
   game.currentTrick = { leaderId: winnerId, plays: [] };
+}
+
+/** Resolve the completed trick: award it, then start the next trick or score the round. */
+export function finalizeTrick(game: GameState): void {
+  if (!game.currentTrick || game.currentTrick.plays.length === 0) return;
+  const override = game.resolvedDuplicateChoice;
+  game.resolvedDuplicateChoice = undefined;
+  const winnerId = determineTrickWinner(game.currentTrick, override);
+  applyTrickWinner(game, winnerId);
+}
+
+/** Called after a player resolves their duplicate-card choice.
+ *  Stores the preference for finalizeTrick and resumes the game.
+ *  Returns trickComplete so the handler knows whether to call finalizeTrick immediately. */
+export function resolveDuplicateCard(
+  game: GameState,
+  socketId: string,
+  choice: "win" | "lose",
+): { ok: true; trickComplete: boolean } | { ok: false; error: string } {
+  if (!game.pendingDuplicateChoice) {
+    return { ok: false, error: "No duplicate choice pending" };
+  }
+  if (!game.currentTrick) {
+    return { ok: false, error: "No active trick" };
+  }
+  const player = game.players.find((p) => p.id === socketId);
+  if (!player) return { ok: false, error: "Player not found" };
+  if (player.playerId !== game.pendingDuplicateChoice.playerId) {
+    return { ok: false, error: "Not your choice to make" };
+  }
+
+  const lastDuplicatePlayerId = game.pendingDuplicateChoice.playerId;
+  game.pendingDuplicateChoice = undefined;
+  // Store so finalizeTrick can use it when the trick ends
+  game.resolvedDuplicateChoice = { lastDuplicatePlayerId, choice };
+
+  const trickComplete = game.currentTrick.plays.length === game.players.length;
+  return { ok: true, trickComplete };
 }
 
 export function startNextRound(

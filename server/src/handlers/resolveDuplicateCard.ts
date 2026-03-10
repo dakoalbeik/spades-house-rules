@@ -1,34 +1,39 @@
-import type { PlayCardPayload, OkErrorResponse } from "shared";
-import { playCard, finalizeTrick } from "../gameLogic";
+import type { ResolveDuplicateCardPayload, OkErrorResponse } from "shared";
+import { resolveDuplicateCard, finalizeTrick } from "../gameLogic";
 import type { HandlerContext } from "./types";
 
 const TRICK_DISPLAY_DELAY_MS = 2000;
 
-export function playCardHandler({
+export function resolveDuplicateCardHandler({
   socket,
   games,
   broadcast,
   persistGames,
 }: HandlerContext) {
-  return async (payload: PlayCardPayload, callback?: (r: OkErrorResponse) => void) => {
+  return async (
+    payload: ResolveDuplicateCardPayload,
+    callback?: (r: OkErrorResponse) => void,
+  ) => {
     const game = games.get(payload?.gameId) ?? null;
     if (!game) {
       callback?.({ ok: false, error: "Game not found" });
       return;
     }
-    const result = playCard(game, socket.id, payload.cardId);
+
+    const result = resolveDuplicateCard(game, socket.id, payload.choice);
     if (!result.ok) {
       callback?.({ ok: false, error: result.error });
       return;
     }
+
+    // Broadcast immediately so the overlay disappears and the next player can act
     broadcast(game);
     persistGames();
     callback?.({ ok: true });
 
-    // Only finalize when the trick is complete AND no duplicate choice is pending.
-    // If pendingDuplicateChoice is set (mid-trick or last-card duplicate), the game
-    // is paused — resolveDuplicateCardHandler will call finalizeTrick after the choice.
-    if (result.trickComplete && !result.pendingDuplicateChoice) {
+    // If the trick was already complete (duplicate was the last card played),
+    // finalize it now after a brief display delay
+    if (result.trickComplete) {
       await new Promise<void>((r) => setTimeout(r, TRICK_DISPLAY_DELAY_MS));
       finalizeTrick(game);
       broadcast(game);

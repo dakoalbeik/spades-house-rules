@@ -9,7 +9,8 @@
     "client": "npm run dev --prefix client",
     "server": "npm run dev --prefix server",
     "build": "npm run build --prefix shared && npm run build --prefix server && npm run build --prefix client",
-    "test": "echo \"No tests defined\""
+    "test": "echo \"No tests defined\"",
+    "dev:play": "node scripts/dev-with-tabs.mjs"
   },
   "keywords": [],
   "author": "",

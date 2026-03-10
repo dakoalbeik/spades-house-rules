@@ -20,6 +20,8 @@ interface GameBoardProps {
   onKick?: (playerId: PlayerId) => void;
   onLeave?: () => void;
   onCancelRound?: () => void;
+  onEndGame?: () => void;
+  onResolveDuplicate?: (choice: "win" | "lose") => void;
 }
 
 export default function GameBoard({
@@ -33,6 +35,8 @@ export default function GameBoard({
   onKick,
   onLeave,
   onCancelRound,
+  onEndGame,
+  onResolveDuplicate,
 }: GameBoardProps) {
   const [showScores, setShowScores] = useState(false);
 
@@ -45,6 +49,8 @@ export default function GameBoard({
 
   const isMyTurn = myPlayer?.playerId === game.currentTurnPlayerId;
   const isActive = game.phase !== "lobby";
+  const isDuplicateChooser =
+    game.pendingDuplicateChoice?.playerId === myPlayer?.playerId;
 
   return (
     <div className={`game-board ${isActive ? "game-board-active" : ""}`}>
@@ -81,6 +87,11 @@ export default function GameBoard({
                   Dismiss round
                 </button>
               )}
+            {myPlayer?.isHost && onEndGame && (
+              <button className="btn-end-game" onClick={onEndGame}>
+                End game
+              </button>
+            )}
             {onLeave && (
               <button className="btn-leave" onClick={onLeave}>
                 Leave
@@ -115,6 +126,53 @@ export default function GameBoard({
             onPlayCard={onPlayCard}
             canPlay={canPlay}
           />
+        </div>
+      )}
+
+      {/* Duplicate card choice overlay */}
+      {game.pendingDuplicateChoice && (
+        <div className="duplicate-choice-overlay">
+          <div className="duplicate-choice-modal">
+            {isDuplicateChooser ? (
+              <>
+                <p className="duplicate-choice-title">
+                  You played a duplicate{" "}
+                  <strong>
+                    {game.pendingDuplicateChoice.card.rank} of{" "}
+                    {game.pendingDuplicateChoice.card.suit}
+                  </strong>
+                  . Do you want to win or lose this trick?
+                </p>
+                <div className="duplicate-choice-actions">
+                  <button
+                    className="btn-win"
+                    onClick={() => onResolveDuplicate?.("win")}
+                  >
+                    Win the trick
+                  </button>
+                  <button
+                    className="btn-lose"
+                    onClick={() => onResolveDuplicate?.("lose")}
+                  >
+                    Lose the trick
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="duplicate-choice-title">
+                {game.players.find(
+                  (p) =>
+                    p.playerId === game.pendingDuplicateChoice?.playerId,
+                )?.name ?? "A player"}{" "}
+                played a duplicate{" "}
+                <strong>
+                  {game.pendingDuplicateChoice.card.rank} of{" "}
+                  {game.pendingDuplicateChoice.card.suit}
+                </strong>{" "}
+                — waiting for them to choose...
+              </p>
+            )}
+          </div>
         </div>
       )}
 

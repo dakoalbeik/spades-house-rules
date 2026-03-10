@@ -142,12 +142,21 @@ function App() {
       handleError(message || "You were kicked from the lobby");
     });
 
+    socket.on("gameEnded", (message) => {
+      setGame(null);
+      setGameId("");
+      clearGameId();
+      clearPlayerId();
+      handleError(message || "The game has ended");
+    });
+
     return () => {
       socket.off("connect");
       socket.off("disconnect");
       socket.off("connect_error");
       socket.off("gameState", handleState);
       socket.off("kicked");
+      socket.off("gameEnded");
     };
   }, [socket, gameId, game, handleError, handleSuccess]);
 
@@ -202,10 +211,26 @@ function App() {
     });
   };
 
+  const handleResolveDuplicate = (choice: "win" | "lose") => {
+    if (!gameId) return;
+    socket.emit("resolveDuplicateCard", { gameId, choice }, (resp) => {
+      if (!resp?.ok) handleError(resp?.error);
+    });
+  };
+
   const handleCancelRound = () => {
     if (!gameId) return;
     socket.emit("cancelRound", { gameId }, (resp) => {
       if (!resp?.ok) handleError(resp?.error);
+    });
+  };
+
+  const handleEndGame = () => {
+    if (!gameId) return;
+    socket.emit("endGame", { gameId }, (resp) => {
+      if (!resp?.ok) handleError(resp?.error);
+      // On success the server emits `gameEnded` to all players including us,
+      // so we don't need to reset state here — the listener handles it.
     });
   };
 
@@ -274,6 +299,8 @@ function App() {
           onKick={handleKick}
           onLeave={handleLeave}
           onCancelRound={handleCancelRound}
+          onEndGame={handleEndGame}
+          onResolveDuplicate={handleResolveDuplicate}
         />
       )}
     </div>

@@ -34,6 +34,12 @@ export interface PlayCardPayload {
   cardId: CardId;
 }
 
+export interface ResolveDuplicateCardPayload {
+  gameId: GameId;
+  /** "win" — the duplicate card wins the trick; "lose" — normal resolution applies */
+  choice: "win" | "lose";
+}
+
 export interface StartNextRoundPayload {
   gameId: GameId;
 }
@@ -87,6 +93,10 @@ export interface ClientToServerEvents {
     payload: PlayCardPayload,
     callback?: (response: OkErrorResponse) => void
   ) => void;
+  resolveDuplicateCard: (
+    payload: ResolveDuplicateCardPayload,
+    callback?: (response: OkErrorResponse) => void
+  ) => void;
   startNextRound: (
     payload: StartNextRoundPayload,
     callback?: (response: OkErrorResponse) => void
@@ -103,6 +113,10 @@ export interface ClientToServerEvents {
     payload: { gameId: string },
     callback?: (response: OkErrorResponse) => void
   ) => void;
+  endGame: (
+    payload: { gameId: string },
+    callback?: (response: OkErrorResponse) => void
+  ) => void;
   requestState: (payload: RequestStatePayload) => void;
 }
 
@@ -111,6 +125,8 @@ export interface ServerToClientEvents {
   gameState: (state: GameStatePayload) => void;
   /** Emitted to a socket when the host kicks them from the lobby */
   kicked: (message?: string) => void;
+  /** Emitted to all players when the host ends the game */
+  gameEnded: (message?: string) => void;
 }
 
 /** Inter-server events (optional; not used in this app) */

@@ -44,6 +44,15 @@ export interface CurrentTrick {
   plays: TrickPlay[];
 }
 
+/** Set when the last card played duplicates an earlier card (same rank+suit).
+ *  The identified player must choose "win" or "lose" before the trick resolves. */
+export interface PendingDuplicateChoice {
+  /** The player who played the last duplicate card */
+  playerId: PlayerId;
+  /** The duplicate card they played */
+  card: Card;
+}
+
 export type GamePhase = "lobby" | "bidding" | "playing" | "round_end";
 
 export type PlayerStatus = "active" | "left";
@@ -73,6 +82,8 @@ export interface GameStatePayload {
   roundNumber: number;
   statusMessage?: string;
   currentTurnPlayerId: PlayerId | null;
+  /** Present when a player must choose to win or lose a trick due to a duplicate card */
+  pendingDuplicateChoice?: PendingDuplicateChoice;
 }
 
 export interface PlayerState {
@@ -105,6 +116,10 @@ export interface GameState {
   statusMessage?: string;
   /** Timestamp when the game was created; used for persistence and later cleanup of old games */
   createdAt: number;
+  /** Present when a player must choose to win or lose a trick due to a duplicate card */
+  pendingDuplicateChoice?: PendingDuplicateChoice;
+  /** Stored after the player makes their duplicate choice; used by finalizeTrick for tie-breaking */
+  resolvedDuplicateChoice?: { lastDuplicatePlayerId: PlayerId; choice: "win" | "lose" };
 }
 
 export interface SerializedGame {
@@ -118,4 +133,5 @@ export interface SerializedGame {
   roundNumber: number;
   statusMessage?: string;
   currentTurnPlayerId: PlayerId | null;
+  pendingDuplicateChoice?: PendingDuplicateChoice;
 }

@@ -1,6 +1,5 @@
 import type { CardId } from "shared/dist/game";
 import type { GameState } from "../types";
-import { sortCards } from "../utils/cardUtils";
 import Card from "./Card";
 import "./Hand.css";
 
@@ -19,7 +18,7 @@ export default function Hand({
   onPlayCard,
   canPlay,
 }: HandProps) {
-  const sortedHand = sortCards(game.hand);
+  const sortedHand = game.hand;
   const count = sortedHand.length;
   const handWidth = count > 0 ? (count - 1) * OFFSET + 80 : 80;
 
