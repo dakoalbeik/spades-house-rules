@@ -33,6 +33,7 @@ import { resolveDuplicateCardHandler } from "./handlers/resolveDuplicateCard";
 import { disconnectHandler } from "./handlers/disconnect";
 import type { HandlerContext } from "./handlers/types";
 import { createAdminRouter } from "./admin/router";
+import { AutoAdvanceScheduler } from "./games/AutoAdvanceScheduler";
 
 /** Remove persisted games older than this (e.g. 30 days) so storage doesn't grow forever */
 const MAX_GAME_AGE_MS = 30 * 24 * 60 * 60 * 1000;
@@ -68,6 +69,16 @@ if (removed > 0) {
   console.log(`Cleaned up ${removed} old game(s) (older than 30 days).`);
 }
 const playerToGame = new Map<string, string>();
+const scheduler = new AutoAdvanceScheduler();
+
+function broadcast(game: GameState) {
+  for (const player of game.players) {
+    if (player.id) {
+      io.to(player.id).emit("gameState", serializeGame(game, player.id));
+    }
+  }
+  scheduler.schedule(game, games, broadcast);
+}
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "admin";
 if (!process.env.ADMIN_PASSWORD) {
@@ -76,15 +87,10 @@ if (!process.env.ADMIN_PASSWORD) {
     "WARNING: ADMIN_PASSWORD not set. Using default 'admin'. Set ADMIN_PASSWORD in production.",
   );
 }
-app.use("/admin", createAdminRouter(games, playerToGame, io, ADMIN_PASSWORD));
-
-function broadcast(game: GameState) {
-  for (const player of game.players) {
-    if (player.id) {
-      io.to(player.id).emit("gameState", serializeGame(game, player.id));
-    }
-  }
-}
+app.use(
+  "/admin",
+  createAdminRouter(games, playerToGame, io, ADMIN_PASSWORD, scheduler, broadcast),
+);
 
 
 function validateOptions(options: Partial<GameOptions>): GameOptions {

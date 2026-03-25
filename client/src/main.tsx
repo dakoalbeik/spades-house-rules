@@ -5,6 +5,7 @@ import "./index.css";
 import App from "./App.tsx";
 import AdminLogin from "./components/AdminLogin.tsx";
 import AdminDashboard from "./components/AdminDashboard.tsx";
+import AdminGameDetail from "./components/AdminGameDetail.tsx";
 import AdminRoute from "./components/AdminRoute.tsx";
 
 createRoot(document.getElementById("root")!).render(
@@ -17,6 +18,14 @@ createRoot(document.getElementById("root")!).render(
         element={
           <AdminRoute>
             <AdminDashboard />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/games/:gameId"
+        element={
+          <AdminRoute>
+            <AdminGameDetail />
           </AdminRoute>
         }
       />

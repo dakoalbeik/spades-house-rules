@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   adminFetch,
   clearAdminPassword,
@@ -195,6 +195,9 @@ export default function AdminDashboard() {
               </ul>
 
               <div className="admin-game-footer">
+                <Link to={`/admin/games/${game.id}`} className="admin-details-link">
+                  Details
+                </Link>
                 <span className="admin-created-at">
                   Created {formatDate(game.createdAt)}
                 </span>

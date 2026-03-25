@@ -5,6 +5,7 @@ import type { HandlerContext } from "./types";
 export function placeBidHandler({
   socket,
   games,
+  playerToGame,
   broadcast,
 }: HandlerContext) {
   return (payload: PlaceBidPayload, callback?: (r: OkErrorResponse) => void) => {
@@ -13,7 +14,11 @@ export function placeBidHandler({
       callback?.({ ok: false, error: "Game not found" });
       return;
     }
-    const result = placeBid(game, socket.id, Number(payload?.bid));
+    if (playerToGame.get(socket.id) !== game.id) {
+      callback?.({ ok: false, error: "Not in this game" });
+      return;
+    }
+    const result = placeBid(game, payload.playerId, Number(payload?.bid));
     if (!result.ok) {
       callback?.({ ok: false, error: result.error });
       return;

@@ -340,13 +340,13 @@ export function startRound(
 
 export function placeBid(
   game: GameState,
-  playerId: string,
+  playerId: PlayerId,
   bid: number,
 ): { ok: true } | { ok: false; error: string } {
   if (game.phase !== "bidding")
     return { ok: false, error: "Not in bidding phase" };
   const player = game.players[game.bidIndex];
-  if (!player || player.id !== playerId)
+  if (!player || player.playerId !== playerId)
     return { ok: false, error: "Not your turn to bid" };
   if (!Number.isInteger(bid) || bid < 0)
     return { ok: false, error: "Bid must be a whole number" };
@@ -368,13 +368,13 @@ export function placeBid(
 
 export function playCard(
   game: GameState,
-  socketId: string,
-  cardId: string,
+  playerId: PlayerId,
+  cardId: CardId,
 ): { ok: true; trickComplete: boolean; pendingDuplicateChoice: boolean } | { ok: false; error: string } {
   if (game.phase !== "playing" || !game.currentTrick)
     return { ok: false, error: "Not in play phase" };
 
-  const player = game.players.find((p) => p.id === socketId);
+  const player = game.players.find((p) => p.playerId === playerId);
   if (!player) return { ok: false, error: "Player not found" };
 
   const expected = getCurrentTurn(game);
@@ -497,7 +497,7 @@ export function finalizeTrick(game: GameState): void {
  *  Returns trickComplete so the handler knows whether to call finalizeTrick immediately. */
 export function resolveDuplicateCard(
   game: GameState,
-  socketId: string,
+  playerId: PlayerId,
   choice: "win" | "lose",
 ): { ok: true; trickComplete: boolean } | { ok: false; error: string } {
   if (!game.pendingDuplicateChoice) {
@@ -506,9 +506,9 @@ export function resolveDuplicateCard(
   if (!game.currentTrick) {
     return { ok: false, error: "No active trick" };
   }
-  const player = game.players.find((p) => p.id === socketId);
+  const player = game.players.find((p) => p.playerId === playerId);
   if (!player) return { ok: false, error: "Player not found" };
-  if (player.playerId !== game.pendingDuplicateChoice.playerId) {
+  if (playerId !== game.pendingDuplicateChoice.playerId) {
     return { ok: false, error: "Not your choice to make" };
   }
 
@@ -574,8 +574,8 @@ export function setPlayerLeft(game: GameState, socketId: string): void {
   }
 }
 
-/** Place a bid for whoever is currently up (used for left players). */
-function placeBidForCurrentBidder(
+/** Place a bid for whoever is currently up (used for left players and auto-bid). */
+export function placeBidForCurrentBidder(
   game: GameState,
   bid: number,
 ): { ok: true } | { ok: false; error: string } {
@@ -597,8 +597,8 @@ function placeBidForCurrentBidder(
   return { ok: true };
 }
 
-/** Get the first legal card id for a player in the current trick (for auto-play). */
-function getLegalCardIds(game: GameState, player: PlayerState): string[] {
+/** Get all legal card ids for a player in the current trick (for auto-play). */
+export function getLegalCardIds(game: GameState, player: PlayerState): CardId[] {
   if (!game.currentTrick || game.phase !== "playing") return [];
   const leadSuit =
     game.currentTrick.leadSuit ?? game.currentTrick.plays[0]?.card.suit;

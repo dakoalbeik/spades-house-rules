@@ -195,15 +195,15 @@ function App() {
   };
 
   const handleBid = (bid: number) => {
-    if (!gameId) return;
-    socket.emit("placeBid", { gameId, bid }, (resp) => {
+    if (!gameId || !myPlayer) return;
+    socket.emit("placeBid", { gameId, playerId: myPlayer.playerId, bid }, (resp) => {
       if (!resp?.ok) handleError(resp?.error);
     });
   };
 
   const handlePlay = (cardId: CardId) => {
-    if (!gameId) return;
-    socket.emit("playCard", { gameId, cardId }, (resp) => {
+    if (!gameId || !myPlayer) return;
+    socket.emit("playCard", { gameId, playerId: myPlayer.playerId, cardId }, (resp) => {
       if (!resp?.ok) handleError(resp?.error);
     });
   };
@@ -223,8 +223,8 @@ function App() {
   };
 
   const handleResolveDuplicate = (choice: "win" | "lose") => {
-    if (!gameId) return;
-    socket.emit("resolveDuplicateCard", { gameId, choice }, (resp) => {
+    if (!gameId || !myPlayer) return;
+    socket.emit("resolveDuplicateCard", { gameId, playerId: myPlayer.playerId, choice }, (resp) => {
       if (!resp?.ok) handleError(resp?.error);
     });
   };

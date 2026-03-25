@@ -16,6 +16,7 @@ export type {
   GameState,
   SerializedGame,
   PlayerId,
+  SocketId,
 } from "./game";
 
 export type {

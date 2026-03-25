@@ -1,0 +1,129 @@
+.admin-back-link {
+  font-size: 0.85rem;
+  color: #9090b0;
+  text-decoration: none;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid #2e2e42;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.admin-back-link:hover {
+  background: #2e2e42;
+  color: #e2e2f0;
+}
+
+/* ── Detail sections ────────────────────────────────────────────────────────── */
+.detail-section {
+  background: #1a1a24;
+  border: 1px solid #2e2e42;
+  border-radius: 10px;
+  padding: 1.25rem 1.25rem 1rem;
+  margin-bottom: 1rem;
+  max-width: 640px;
+}
+
+.detail-section h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: #c8c8e0;
+}
+
+.detail-hint {
+  font-size: 0.8rem;
+  color: #666680;
+  margin: 0 0 1rem;
+}
+
+/* ── Toggle buttons ─────────────────────────────────────────────────────────── */
+.toggle-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+}
+
+.toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggle-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.toggle-btn.toggle-on {
+  background: #2a3a20;
+  border-color: #3d5c2e;
+  color: #6fcf6f;
+}
+
+.toggle-btn.toggle-on .toggle-indicator {
+  background: #6fcf6f;
+  box-shadow: 0 0 6px #6fcf6f;
+}
+
+.toggle-btn.toggle-off {
+  background: #1e1e2e;
+  border-color: #2e2e42;
+  color: #666680;
+}
+
+.toggle-btn.toggle-off .toggle-indicator {
+  background: #444460;
+}
+
+/* ── Player list (detail variant) ──────────────────────────────────────────── */
+.detail-player-list {
+  gap: 0.5rem !important;
+}
+
+.detail-player-list .admin-player {
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  background: #12121a;
+  border: 1px solid #2e2e42;
+  font-size: 0.88rem;
+}
+
+.player-active-turn {
+  border-color: #7c6af7 !important;
+  background: #1a1630 !important;
+}
+
+.turn-arrow {
+  color: #7c6af7;
+  font-size: 0.7rem;
+  margin-right: 0.2rem;
+}
+
+.player-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.78rem;
+  color: #9090b0;
+}
+
+.player-bid {
+  color: #6ab0f7;
+}
+
+.player-tricks {
+  color: #a0a0c0;
+}

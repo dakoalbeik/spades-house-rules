@@ -7,6 +7,7 @@ const TRICK_DISPLAY_DELAY_MS = 2000;
 export function resolveDuplicateCardHandler({
   socket,
   games,
+  playerToGame,
   broadcast,
 }: HandlerContext) {
   return async (
@@ -18,23 +19,23 @@ export function resolveDuplicateCardHandler({
       callback?.({ ok: false, error: "Game not found" });
       return;
     }
-
-    const result = resolveDuplicateCard(game, socket.id, payload.choice);
+    if (playerToGame.get(socket.id) !== game.id) {
+      callback?.({ ok: false, error: "Not in this game" });
+      return;
+    }
+    const result = resolveDuplicateCard(game, payload.playerId, payload.choice);
     if (!result.ok) {
       callback?.({ ok: false, error: result.error });
       return;
     }
 
-    // Broadcast immediately so the overlay disappears and the next player can act
     broadcast(game);
     games.save();
     callback?.({ ok: true });
 
-    // If the trick was already complete (duplicate was the last card played),
-    // finalize it now: prepare resolution first so clients can animate
     if (result.trickComplete) {
       prepareTrickResolution(game);
-      broadcast(game); // clients see trickResolution → animate cards toward winner
+      broadcast(game);
       games.save();
       await new Promise<void>((r) => setTimeout(r, TRICK_DISPLAY_DELAY_MS));
       finalizeTrick(game);

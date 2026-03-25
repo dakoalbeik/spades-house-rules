@@ -5,8 +5,10 @@ import type {
   InterServerEvents,
   ServerToClientEvents,
   SocketData,
+  GameState,
 } from "shared";
 import type { GameRepository } from "../games/GameRepository";
+import type { AutoAdvanceScheduler } from "../games/AutoAdvanceScheduler";
 
 type IoServer = Server<
   ClientToServerEvents,
@@ -15,11 +17,43 @@ type IoServer = Server<
   SocketData
 >;
 
+function serializeGame(g: GameState) {
+  return {
+    id: g.id,
+    phase: g.phase,
+    ongoing: g.phase !== "lobby",
+    roundNumber: g.roundNumber,
+    options: g.options,
+    createdAt: g.createdAt,
+    autoBid: g.autoBid ?? false,
+    autoPlay: g.autoPlay ?? false,
+    currentTurnPlayerId: g.phase === "bidding"
+      ? g.players[g.bidIndex]?.playerId ?? null
+      : g.currentTrick
+        ? g.players.find((p) =>
+            g.currentTrick!.plays.length < g.players.length &&
+            !g.currentTrick!.plays.some((pl) => pl.playerId === p.playerId),
+          )?.playerId ?? null
+        : null,
+    players: g.players.map((p) => ({
+      playerId: p.playerId,
+      name: p.name,
+      score: p.score,
+      bid: p.bid,
+      tricks: p.tricks,
+      status: p.status,
+      isHost: p.isHost,
+    })),
+  };
+}
+
 export function createAdminRouter(
   games: GameRepository,
   playerToGame: Map<string, string>,
   io: IoServer,
   adminPassword: string,
+  scheduler: AutoAdvanceScheduler,
+  broadcast: (g: GameState) => void,
 ) {
   const router = Router();
 
@@ -37,29 +71,43 @@ export function createAdminRouter(
   }
 
   router.get("/games", requireAdmin, (_req, res) => {
-    const list = games.all().map((g) => ({
-      id: g.id,
-      phase: g.phase,
-      ongoing: g.phase !== "lobby",
-      roundNumber: g.roundNumber,
-      options: g.options,
-      createdAt: g.createdAt,
-      players: g.players.map((p) => ({
-        name: p.name,
-        score: p.score,
-        status: p.status,
-        isHost: p.isHost,
-      })),
-    }));
-    res.json({ ok: true, games: list });
+    res.json({ ok: true, games: games.all().map(serializeGame) });
   });
 
-  router.delete("/games/:gameId", requireAdmin, (req, res) => {
-    const game = games.get(req.params.gameId);
+  router.get("/games/:gameId", requireAdmin, (req, res) => {
+    const game = games.get(req.params.gameId.toUpperCase());
     if (!game) {
       res.status(404).json({ ok: false, error: "Game not found" });
       return;
     }
+    res.json({ ok: true, game: serializeGame(game) });
+  });
+
+  router.patch("/games/:gameId/settings", requireAdmin, (req, res) => {
+    const game = games.get(req.params.gameId.toUpperCase());
+    if (!game) {
+      res.status(404).json({ ok: false, error: "Game not found" });
+      return;
+    }
+    const { autoBid, autoPlay } = req.body as {
+      autoBid?: boolean;
+      autoPlay?: boolean;
+    };
+    if (typeof autoBid === "boolean") game.autoBid = autoBid;
+    if (typeof autoPlay === "boolean") game.autoPlay = autoPlay;
+    games.save();
+    // Kick off auto-advance immediately if a flag was just enabled
+    scheduler.schedule(game, games, broadcast);
+    res.json({ ok: true, game: serializeGame(game) });
+  });
+
+  router.delete("/games/:gameId", requireAdmin, (req, res) => {
+    const game = games.get(req.params.gameId.toUpperCase());
+    if (!game) {
+      res.status(404).json({ ok: false, error: "Game not found" });
+      return;
+    }
+    scheduler.cancel(game.id);
     for (const player of game.players) {
       if (player.id) {
         io.to(player.id).emit(
@@ -69,7 +117,7 @@ export function createAdminRouter(
         playerToGame.delete(player.id);
       }
     }
-    games.delete(req.params.gameId);
+    games.delete(req.params.gameId.toUpperCase());
     games.save();
     res.json({ ok: true });
   });

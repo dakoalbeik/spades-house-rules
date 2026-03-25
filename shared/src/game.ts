@@ -8,6 +8,7 @@ import { Brand } from "./general";
 export type PlayerId = Brand<string, "PlayerId">;
 export type GameId = Brand<string, "GameId">;
 export type CardId = Brand<string, "CardId">;
+export type SocketId = Brand<string, "SocketId">;
 
 export type Suit = "spades" | "hearts" | "diamonds" | "clubs";
 
@@ -145,6 +146,10 @@ export interface GameState {
   trickResolution?: TrickResolution;
   /** Chat bubbles shown near each player; keyed by playerId string */
   chatBubbles: Record<string, ChatBubble>;
+  /** Admin-controlled: server automatically places bids for all players */
+  autoBid?: boolean;
+  /** Admin-controlled: server automatically plays cards for all players */
+  autoPlay?: boolean;
 }
 
 export interface SerializedGame {

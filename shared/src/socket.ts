@@ -27,16 +27,19 @@ export interface StartGamePayload {
 
 export interface PlaceBidPayload {
   gameId: GameId;
+  playerId: PlayerId;
   bid: number;
 }
 
 export interface PlayCardPayload {
   gameId: GameId;
+  playerId: PlayerId;
   cardId: CardId;
 }
 
 export interface ResolveDuplicateCardPayload {
   gameId: GameId;
+  playerId: PlayerId;
   /** "win" — the duplicate card wins the trick; "lose" — normal resolution applies */
   choice: "win" | "lose";
 }

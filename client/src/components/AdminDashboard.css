@@ -355,3 +355,17 @@
 .admin-btn-cancel:hover {
   background: #2e2e42;
 }
+
+.admin-details-link {
+  font-size: 0.8rem;
+  color: #b0a0f7;
+  text-decoration: none;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid #3e2e6a;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.admin-details-link:hover {
+  background: #2a1e4a;
+}

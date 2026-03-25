@@ -7,6 +7,7 @@ const TRICK_DISPLAY_DELAY_MS = 2000;
 export function playCardHandler({
   socket,
   games,
+  playerToGame,
   broadcast,
 }: HandlerContext) {
   return async (payload: PlayCardPayload, callback?: (r: OkErrorResponse) => void) => {
@@ -15,7 +16,11 @@ export function playCardHandler({
       callback?.({ ok: false, error: "Game not found" });
       return;
     }
-    const result = playCard(game, socket.id, payload.cardId);
+    if (playerToGame.get(socket.id) !== game.id) {
+      callback?.({ ok: false, error: "Not in this game" });
+      return;
+    }
+    const result = playCard(game, payload.playerId, payload.cardId);
     if (!result.ok) {
       callback?.({ ok: false, error: result.error });
       return;
@@ -24,12 +29,9 @@ export function playCardHandler({
     games.save();
     callback?.({ ok: true });
 
-    // Only finalize when the trick is complete AND no duplicate choice is pending.
-    // If pendingDuplicateChoice is set (mid-trick or last-card duplicate), the game
-    // is paused — resolveDuplicateCardHandler will call finalizeTrick after the choice.
     if (result.trickComplete && !result.pendingDuplicateChoice) {
       prepareTrickResolution(game);
-      broadcast(game); // clients see trickResolution → animate cards toward winner
+      broadcast(game);
       games.save();
       await new Promise<void>((r) => setTimeout(r, TRICK_DISPLAY_DELAY_MS));
       finalizeTrick(game);
