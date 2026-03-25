@@ -1,11 +1,12 @@
-import type { OkErrorResponse } from "shared";
+import type { OkErrorResponse, SocketId } from "shared";
 import { advanceLeftPlayers, removePlayer, setPlayerLeft } from "../gameLogic";
 import type { HandlerContext } from "./types";
 
 export function leaveGameHandler({
   socket,
+  io,
   games,
-  playerToGame,
+  connections,
   broadcast,
 }: HandlerContext) {
   return (
@@ -19,17 +20,26 @@ export function leaveGameHandler({
       return;
     }
 
-    playerToGame.delete(socket.id);
-    socket.leave(gameId);
+    const playerId = connections.getPlayerForSocket(socket.id as SocketId);
+    if (!playerId) {
+      callback?.({ ok: false, error: "Not in this game" });
+      return;
+    }
+
+    // Remove all sockets for this player from the registry and room
+    const sockets = connections.unregisterPlayer(playerId);
+    for (const sid of sockets) {
+      io.sockets.sockets.get(sid)?.leave(gameId);
+    }
 
     if (game.phase === "lobby") {
-      removePlayer(game, socket.id);
+      removePlayer(game, playerId);
       games.save();
       if (game.players.length > 0) {
         broadcast(game);
       }
     } else {
-      setPlayerLeft(game, socket.id);
+      setPlayerLeft(game, playerId);
       advanceLeftPlayers(game);
       games.save();
       broadcast(game);

@@ -1,21 +1,28 @@
 import { advanceLeftPlayers, removePlayer, setPlayerLeft } from "../gameLogic";
 import type { HandlerContext } from "./types";
+import type { SocketId } from "shared";
 
 export function disconnectHandler({
   socket,
   games,
-  playerToGame,
+  connections,
   broadcast,
 }: HandlerContext) {
   return () => {
-    const gameId = playerToGame.get(socket.id);
+    const playerId = connections.getPlayerForSocket(socket.id as SocketId);
+    if (!playerId) return;
+    const gameId = connections.getGameForPlayer(playerId);
+    const { remainingSockets } = connections.unregisterSocket(socket.id as SocketId);
+
+    // Player still connected on another tab/device — no game-state change needed
+    if (remainingSockets > 0) return;
+
     if (!gameId) return;
     const game = games.get(gameId);
     if (!game) return;
-    playerToGame.delete(socket.id);
 
     if (game.phase === "lobby") {
-      removePlayer(game, socket.id);
+      removePlayer(game, playerId);
       games.save();
       if (game.players.length > 0) {
         broadcast(game);
@@ -23,7 +30,7 @@ export function disconnectHandler({
       return;
     }
 
-    setPlayerLeft(game, socket.id);
+    setPlayerLeft(game, playerId);
     advanceLeftPlayers(game);
     games.save();
     broadcast(game);

@@ -34,6 +34,7 @@ import { disconnectHandler } from "./handlers/disconnect";
 import type { HandlerContext } from "./handlers/types";
 import { createAdminRouter } from "./admin/router";
 import { AutoAdvanceScheduler } from "./games/AutoAdvanceScheduler";
+import { ConnectionRegistry } from "./connections/ConnectionRegistry";
 
 /** Remove persisted games older than this (e.g. 30 days) so storage doesn't grow forever */
 const MAX_GAME_AGE_MS = 30 * 24 * 60 * 60 * 1000;
@@ -68,13 +69,13 @@ if (removed > 0) {
   // eslint-disable-next-line no-console
   console.log(`Cleaned up ${removed} old game(s) (older than 30 days).`);
 }
-const playerToGame = new Map<string, string>();
+const connections = new ConnectionRegistry();
 const scheduler = new AutoAdvanceScheduler();
 
 function broadcast(game: GameState) {
   for (const player of game.players) {
-    if (player.id) {
-      io.to(player.id).emit("gameState", serializeGame(game, player.id));
+    for (const socketId of connections.getSocketsForPlayer(player.playerId)) {
+      io.to(socketId).emit("gameState", serializeGame(game, player.playerId));
     }
   }
   scheduler.schedule(game, games, broadcast);
@@ -89,7 +90,7 @@ if (!process.env.ADMIN_PASSWORD) {
 }
 app.use(
   "/admin",
-  createAdminRouter(games, playerToGame, io, ADMIN_PASSWORD, scheduler, broadcast),
+  createAdminRouter(games, connections, io, ADMIN_PASSWORD, scheduler, broadcast),
 );
 
 
@@ -123,7 +124,7 @@ io.on(
       socket,
       io,
       games,
-      playerToGame,
+      connections,
       broadcast,
       validateOptions,
     };

@@ -1,11 +1,11 @@
-import type { JoinGamePayload, GameResponse } from "shared";
+import type { JoinGamePayload, GameResponse, SocketId } from "shared";
 import { newPlayerId } from "../gameLogic";
 import type { HandlerContext } from "./types";
 
 export function joinGameHandler({
   socket,
   games,
-  playerToGame,
+  connections,
   broadcast,
 }: HandlerContext) {
   return (payload: JoinGamePayload, callback?: (r: GameResponse) => void) => {
@@ -26,7 +26,10 @@ export function joinGameHandler({
       return;
     }
 
-    const alreadyInGame = game.players.find((p) => p.id === socket.id);
+    const existingPlayerId = connections.getPlayerForSocket(socket.id as SocketId);
+    const alreadyInGame = existingPlayerId
+      ? game.players.find((p) => p.playerId === existingPlayerId)
+      : undefined;
     if (alreadyInGame) {
       // eslint-disable-next-line no-console
       console.log(`Player ${socket.id} already in game ${gameIdUpper}`);
@@ -54,7 +57,7 @@ export function joinGameHandler({
 
       slot.id = socket.id;
       slot.status = "active";
-      playerToGame.set(socket.id, game.id);
+      connections.register(socket.id as SocketId, slot.playerId, game.id);
       socket.join(game.id);
       // eslint-disable-next-line no-console
       console.log(`Player ${socket.id} (${slot.name}) rejoined game ${game.id}`);
@@ -80,7 +83,7 @@ export function joinGameHandler({
       isHost: false,
       status: "active",
     });
-    playerToGame.set(socket.id, game.id);
+    connections.register(socket.id as SocketId, stablePlayerId, game.id);
     socket.join(game.id);
 
     // eslint-disable-next-line no-console

@@ -217,11 +217,11 @@ function sortHand(hand: Card[]): Card[] {
 
 export function serializeGame(
   game: GameState,
-  viewerId: string,
+  viewerId: PlayerId,
 ): SerializedGame {
-  const viewer = game.players.find((p) => p.id === viewerId);
+  const viewer = game.players.find((p) => p.playerId === viewerId);
   const currentTurn = getCurrentTurn(game);
-  const viewerIndex = game.players.findIndex((p) => p.id === viewerId);
+  const viewerIndex = game.players.findIndex((p) => p.playerId === viewerId);
   const orderedPlayers = game.players
     .slice(viewerIndex)
     .concat(game.players.slice(0, viewerIndex));
@@ -257,7 +257,7 @@ export function serializeGame(
       bid: p.bid,
       cardCount: p.hand.length,
       isHost: p.isHost,
-      isSelf: p.id === viewerId,
+      isSelf: p.playerId === viewerId,
       status: p.status ?? DEFAULT_STATUS,
     })),
   };
@@ -556,8 +556,8 @@ export function cancelRound(
 }
 
 /** Mark a player as left (disconnected) but keep them in the game so they can rejoin. */
-export function setPlayerLeft(game: GameState, socketId: string): void {
-  const player = game.players.find((p) => p.id === socketId);
+export function setPlayerLeft(game: GameState, playerId: PlayerId): void {
+  const player = game.players.find((p) => p.playerId === playerId);
   if (!player) return;
   player.status = "left";
   player.id = "";
@@ -714,10 +714,9 @@ export function advanceLeftPlayers(game: GameState): void {
   }
 }
 
-export function removePlayer(game: GameState, socketId: string): void {
-  const idx = game.players.findIndex((p) => p.id === socketId);
+export function removePlayer(game: GameState, playerId: PlayerId): void {
+  const idx = game.players.findIndex((p) => p.playerId === playerId);
   if (idx === -1) return;
-  const { playerId } = game.players[idx];
   game.players.splice(idx, 1);
   if (game.hostId === playerId && game.players[0]) {
     game.hostId = game.players[0].playerId;

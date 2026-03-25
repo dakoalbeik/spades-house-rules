@@ -1,11 +1,11 @@
-import type { CreateGamePayload, GameResponse } from "shared";
+import type { CreateGamePayload, GameResponse, SocketId } from "shared";
 import { createGame } from "../gameLogic";
 import type { HandlerContext } from "./types";
 
 export function createGameHandler({
   socket,
   games,
-  playerToGame,
+  connections,
   broadcast,
   validateOptions,
 }: HandlerContext) {
@@ -21,7 +21,7 @@ export function createGameHandler({
       game = createGame(socket.id, name, options);
     }
     games.set(game.id, game);
-    playerToGame.set(socket.id, game.id);
+    connections.register(socket.id as SocketId, game.players[0].playerId, game.id);
     socket.join(game.id);
     broadcast(game);
     games.save();

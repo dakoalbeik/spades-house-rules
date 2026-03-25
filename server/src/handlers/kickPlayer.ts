@@ -1,4 +1,4 @@
-import type { KickPlayerPayload, OkErrorResponse } from "shared";
+import type { KickPlayerPayload, OkErrorResponse, SocketId } from "shared";
 import { removePlayer } from "../gameLogic";
 import type { HandlerContext } from "./types";
 
@@ -6,7 +6,7 @@ export function kickPlayerHandler({
   socket,
   io,
   games,
-  playerToGame,
+  connections,
   broadcast,
 }: HandlerContext) {
   return (payload: KickPlayerPayload, callback?: (r: OkErrorResponse) => void) => {
@@ -24,7 +24,8 @@ export function kickPlayerHandler({
       callback?.({ ok: false, error: "Can only kick players in the lobby" });
       return;
     }
-    const requester = game.players.find((p) => p.id === socket.id);
+    const requesterId = connections.getPlayerForSocket(socket.id as SocketId);
+    const requester = requesterId ? game.players.find((p) => p.playerId === requesterId) : undefined;
     if (!requester?.isHost) {
       callback?.({ ok: false, error: "Only the host can kick players" });
       return;
@@ -43,14 +44,13 @@ export function kickPlayerHandler({
       callback?.({ ok: false, error: "Cannot kick the host" });
       return;
     }
-    const kickedSocketId = toKick.id;
-    removePlayer(game, kickedSocketId);
-    playerToGame.delete(kickedSocketId);
+    removePlayer(game, toKick.playerId);
+    const kickedSockets = connections.unregisterPlayer(toKick.playerId);
     broadcast(game);
     games.save();
-    if (kickedSocketId) {
-      io.to(kickedSocketId).emit("kicked", "You were kicked from the lobby");
-      io.sockets.sockets.get(kickedSocketId)?.leave(gameId);
+    for (const sid of kickedSockets) {
+      io.to(sid).emit("kicked", "You were kicked from the lobby");
+      io.sockets.sockets.get(sid)?.leave(gameId);
     }
     callback?.({ ok: true });
   };

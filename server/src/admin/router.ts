@@ -9,6 +9,7 @@ import type {
 } from "shared";
 import type { GameRepository } from "../games/GameRepository";
 import type { AutoAdvanceScheduler } from "../games/AutoAdvanceScheduler";
+import type { ConnectionRegistry } from "../connections/ConnectionRegistry";
 
 type IoServer = Server<
   ClientToServerEvents,
@@ -49,7 +50,7 @@ function serializeGame(g: GameState) {
 
 export function createAdminRouter(
   games: GameRepository,
-  playerToGame: Map<string, string>,
+  connections: ConnectionRegistry,
   io: IoServer,
   adminPassword: string,
   scheduler: AutoAdvanceScheduler,
@@ -109,13 +110,10 @@ export function createAdminRouter(
     }
     scheduler.cancel(game.id);
     for (const player of game.players) {
-      if (player.id) {
-        io.to(player.id).emit(
-          "gameEnded",
-          "Game was deleted by an administrator",
-        );
-        playerToGame.delete(player.id);
+      for (const sid of connections.getSocketsForPlayer(player.playerId)) {
+        io.to(sid).emit("gameEnded", "Game was deleted by an administrator");
       }
+      connections.unregisterPlayer(player.playerId);
     }
     games.delete(req.params.gameId.toUpperCase());
     games.save();

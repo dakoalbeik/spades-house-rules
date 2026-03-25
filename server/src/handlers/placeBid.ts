@@ -1,11 +1,11 @@
-import type { PlaceBidPayload, OkErrorResponse } from "shared";
+import type { PlaceBidPayload, OkErrorResponse, SocketId } from "shared";
 import { placeBid } from "../gameLogic";
 import type { HandlerContext } from "./types";
 
 export function placeBidHandler({
   socket,
   games,
-  playerToGame,
+  connections,
   broadcast,
 }: HandlerContext) {
   return (payload: PlaceBidPayload, callback?: (r: OkErrorResponse) => void) => {
@@ -14,7 +14,7 @@ export function placeBidHandler({
       callback?.({ ok: false, error: "Game not found" });
       return;
     }
-    if (playerToGame.get(socket.id) !== game.id) {
+    if (!connections.isSocketInGame(socket.id as SocketId, game.id)) {
       callback?.({ ok: false, error: "Not in this game" });
       return;
     }

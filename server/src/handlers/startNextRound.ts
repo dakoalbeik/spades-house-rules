@@ -1,10 +1,11 @@
-import type { StartNextRoundPayload, OkErrorResponse } from "shared";
+import type { StartNextRoundPayload, OkErrorResponse, SocketId } from "shared";
 import { startNextRound } from "../gameLogic";
 import type { HandlerContext } from "./types";
 
 export function startNextRoundHandler({
   socket,
   games,
+  connections,
   broadcast,
 }: HandlerContext) {
   return (payload: StartNextRoundPayload, callback?: (r: OkErrorResponse) => void) => {
@@ -13,7 +14,8 @@ export function startNextRoundHandler({
       callback?.({ ok: false, error: "Game not found" });
       return;
     }
-    const hostPlayer = game.players.find((p) => p.id === socket.id);
+    const playerId = connections.getPlayerForSocket(socket.id as SocketId);
+    const hostPlayer = playerId ? game.players.find((p) => p.playerId === playerId) : undefined;
     if (!hostPlayer?.isHost) {
       callback?.({ ok: false, error: "Only host can start next round" });
       return;

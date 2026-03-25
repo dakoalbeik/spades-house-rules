@@ -8,6 +8,7 @@ import type {
 } from "shared";
 import type { GameState } from "shared";
 import type { GameRepository } from "../games/GameRepository";
+import type { ConnectionRegistry } from "../connections/ConnectionRegistry";
 
 export type AppSocket = Socket<
   ClientToServerEvents,
@@ -27,7 +28,7 @@ export interface HandlerContext {
   socket: AppSocket;
   io: AppServer;
   games: GameRepository;
-  playerToGame: Map<string, string>;
+  connections: ConnectionRegistry;
   broadcast: (game: GameState) => void;
   validateOptions: (options: Partial<GameOptions>) => GameOptions;
 }

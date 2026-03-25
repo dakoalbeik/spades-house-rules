@@ -1,4 +1,4 @@
-import type { PlayCardPayload, OkErrorResponse } from "shared";
+import type { PlayCardPayload, OkErrorResponse, SocketId } from "shared";
 import { playCard, prepareTrickResolution, finalizeTrick } from "../gameLogic";
 import type { HandlerContext } from "./types";
 
@@ -7,7 +7,7 @@ const TRICK_DISPLAY_DELAY_MS = 2000;
 export function playCardHandler({
   socket,
   games,
-  playerToGame,
+  connections,
   broadcast,
 }: HandlerContext) {
   return async (payload: PlayCardPayload, callback?: (r: OkErrorResponse) => void) => {
@@ -16,7 +16,7 @@ export function playCardHandler({
       callback?.({ ok: false, error: "Game not found" });
       return;
     }
-    if (playerToGame.get(socket.id) !== game.id) {
+    if (!connections.isSocketInGame(socket.id as SocketId, game.id)) {
       callback?.({ ok: false, error: "Not in this game" });
       return;
     }

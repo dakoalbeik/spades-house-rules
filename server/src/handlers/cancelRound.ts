@@ -1,11 +1,11 @@
 import { cancelRound } from "../gameLogic";
-import type { OkErrorResponse } from "shared";
+import type { OkErrorResponse, SocketId } from "shared";
 import type { HandlerContext } from "./types";
 
 export function cancelRoundHandler({
   socket,
   games,
-  playerToGame,
+  connections,
   broadcast,
 }: HandlerContext) {
   return (
@@ -19,7 +19,8 @@ export function cancelRoundHandler({
       return;
     }
 
-    const player = game.players.find((p) => p.id === socket.id);
+    const playerId = connections.getPlayerForSocket(socket.id as SocketId);
+    const player = playerId ? game.players.find((p) => p.playerId === playerId) : undefined;
     if (!player?.isHost) {
       callback?.({ ok: false, error: "Only the host can dismiss a round" });
       return;

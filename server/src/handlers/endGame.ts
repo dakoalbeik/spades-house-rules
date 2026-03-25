@@ -1,11 +1,11 @@
-import type { OkErrorResponse } from "shared";
+import type { OkErrorResponse, SocketId } from "shared";
 import type { HandlerContext } from "./types";
 
 export function endGameHandler({
   socket,
   io,
   games,
-  playerToGame,
+  connections,
 }: HandlerContext) {
   return (
     payload: { gameId: string },
@@ -18,22 +18,19 @@ export function endGameHandler({
       return;
     }
 
-    const player = game.players.find((p) => p.id === socket.id);
+    const requesterId = connections.getPlayerForSocket(socket.id as SocketId);
+    const player = requesterId ? game.players.find((p) => p.playerId === requesterId) : undefined;
     if (!player?.isHost) {
       callback?.({ ok: false, error: "Only the host can end the game" });
       return;
     }
 
-    // Notify all players before deleting
+    // Notify all sockets of all players, then clean up registry
     for (const p of game.players) {
-      if (p.id) {
-        io.to(p.id).emit("gameEnded", "The host ended the game.");
+      for (const sid of connections.getSocketsForPlayer(p.playerId)) {
+        io.to(sid).emit("gameEnded", "The host ended the game.");
       }
-    }
-
-    // Clean up server-side state
-    for (const p of game.players) {
-      playerToGame.delete(p.id);
+      connections.unregisterPlayer(p.playerId);
     }
     games.delete(gameId);
     games.save();
