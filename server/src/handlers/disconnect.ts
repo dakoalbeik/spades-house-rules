@@ -6,7 +6,6 @@ export function disconnectHandler({
   games,
   playerToGame,
   broadcast,
-  persistGames,
 }: HandlerContext) {
   return () => {
     const gameId = playerToGame.get(socket.id);
@@ -17,7 +16,7 @@ export function disconnectHandler({
 
     if (game.phase === "lobby") {
       removePlayer(game, socket.id);
-      persistGames();
+      games.save();
       if (game.players.length > 0) {
         broadcast(game);
       }
@@ -26,7 +25,7 @@ export function disconnectHandler({
 
     setPlayerLeft(game, socket.id);
     advanceLeftPlayers(game);
-    persistGames();
+    games.save();
     broadcast(game);
   };
 }

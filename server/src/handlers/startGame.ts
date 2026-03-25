@@ -6,7 +6,6 @@ export function startGameHandler({
   socket,
   games,
   broadcast,
-  persistGames,
 }: HandlerContext) {
   return (payload: StartGamePayload, callback?: (r: OkErrorResponse) => void) => {
     const game = games.get(payload?.gameId) ?? null;
@@ -29,7 +28,7 @@ export function startGameHandler({
       return;
     }
     broadcast(game);
-    persistGames();
+    games.save();
     callback?.({ ok: true });
   };
 }

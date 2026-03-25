@@ -7,6 +7,7 @@ import type {
   GameOptions,
 } from "shared";
 import type { GameState } from "shared";
+import type { GameRepository } from "../games/GameRepository";
 
 export type AppSocket = Socket<
   ClientToServerEvents,
@@ -25,9 +26,8 @@ export type AppServer = Server<
 export interface HandlerContext {
   socket: AppSocket;
   io: AppServer;
-  games: Map<string, GameState>;
+  games: GameRepository;
   playerToGame: Map<string, string>;
   broadcast: (game: GameState) => void;
-  persistGames: () => void;
   validateOptions: (options: Partial<GameOptions>) => GameOptions;
 }

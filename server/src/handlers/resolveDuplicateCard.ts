@@ -8,7 +8,6 @@ export function resolveDuplicateCardHandler({
   socket,
   games,
   broadcast,
-  persistGames,
 }: HandlerContext) {
   return async (
     payload: ResolveDuplicateCardPayload,
@@ -28,7 +27,7 @@ export function resolveDuplicateCardHandler({
 
     // Broadcast immediately so the overlay disappears and the next player can act
     broadcast(game);
-    persistGames();
+    games.save();
     callback?.({ ok: true });
 
     // If the trick was already complete (duplicate was the last card played),
@@ -36,11 +35,11 @@ export function resolveDuplicateCardHandler({
     if (result.trickComplete) {
       prepareTrickResolution(game);
       broadcast(game); // clients see trickResolution → animate cards toward winner
-      persistGames();
+      games.save();
       await new Promise<void>((r) => setTimeout(r, TRICK_DISPLAY_DELAY_MS));
       finalizeTrick(game);
       broadcast(game);
-      persistGames();
+      games.save();
     }
   };
 }

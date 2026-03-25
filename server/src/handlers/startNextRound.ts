@@ -6,7 +6,6 @@ export function startNextRoundHandler({
   socket,
   games,
   broadcast,
-  persistGames,
 }: HandlerContext) {
   return (payload: StartNextRoundPayload, callback?: (r: OkErrorResponse) => void) => {
     const game = games.get(payload?.gameId) ?? null;
@@ -25,7 +24,7 @@ export function startNextRoundHandler({
       return;
     }
     broadcast(game);
-    persistGames();
+    games.save();
     callback?.({ ok: true });
   };
 }

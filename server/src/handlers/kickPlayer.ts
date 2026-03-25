@@ -8,7 +8,6 @@ export function kickPlayerHandler({
   games,
   playerToGame,
   broadcast,
-  persistGames,
 }: HandlerContext) {
   return (payload: KickPlayerPayload, callback?: (r: OkErrorResponse) => void) => {
     const gameId = payload?.gameId?.trim().toUpperCase();
@@ -48,7 +47,7 @@ export function kickPlayerHandler({
     removePlayer(game, kickedSocketId);
     playerToGame.delete(kickedSocketId);
     broadcast(game);
-    persistGames();
+    games.save();
     if (kickedSocketId) {
       io.to(kickedSocketId).emit("kicked", "You were kicked from the lobby");
       io.sockets.sockets.get(kickedSocketId)?.leave(gameId);

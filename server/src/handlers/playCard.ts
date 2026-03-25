@@ -8,7 +8,6 @@ export function playCardHandler({
   socket,
   games,
   broadcast,
-  persistGames,
 }: HandlerContext) {
   return async (payload: PlayCardPayload, callback?: (r: OkErrorResponse) => void) => {
     const game = games.get(payload?.gameId) ?? null;
@@ -22,7 +21,7 @@ export function playCardHandler({
       return;
     }
     broadcast(game);
-    persistGames();
+    games.save();
     callback?.({ ok: true });
 
     // Only finalize when the trick is complete AND no duplicate choice is pending.
@@ -31,11 +30,11 @@ export function playCardHandler({
     if (result.trickComplete && !result.pendingDuplicateChoice) {
       prepareTrickResolution(game);
       broadcast(game); // clients see trickResolution → animate cards toward winner
-      persistGames();
+      games.save();
       await new Promise<void>((r) => setTimeout(r, TRICK_DISPLAY_DELAY_MS));
       finalizeTrick(game);
       broadcast(game);
-      persistGames();
+      games.save();
     }
   };
 }

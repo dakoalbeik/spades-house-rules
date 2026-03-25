@@ -7,7 +7,6 @@ export function leaveGameHandler({
   games,
   playerToGame,
   broadcast,
-  persistGames,
 }: HandlerContext) {
   return (
     payload: { gameId: string },
@@ -25,14 +24,14 @@ export function leaveGameHandler({
 
     if (game.phase === "lobby") {
       removePlayer(game, socket.id);
-      persistGames();
+      games.save();
       if (game.players.length > 0) {
         broadcast(game);
       }
     } else {
       setPlayerLeft(game, socket.id);
       advanceLeftPlayers(game);
-      persistGames();
+      games.save();
       broadcast(game);
     }
 

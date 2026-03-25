@@ -7,7 +7,6 @@ export function createGameHandler({
   games,
   playerToGame,
   broadcast,
-  persistGames,
   validateOptions,
 }: HandlerContext) {
   return (payload: CreateGamePayload, callback?: (r: GameResponse) => void) => {
@@ -25,7 +24,7 @@ export function createGameHandler({
     playerToGame.set(socket.id, game.id);
     socket.join(game.id);
     broadcast(game);
-    persistGames();
+    games.save();
     callback?.({
       ok: true,
       gameId: game.id,

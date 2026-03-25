@@ -16,8 +16,8 @@ import {
   MIN_PLAYERS,
   serializeGame,
 } from "./gameLogic";
-import { cleanupOldGames, loadGames, saveGames } from "./persistence";
 import type { GameState } from "shared";
+import { InMemoryGameRepository } from "./games/InMemoryGameRepository";
 import { createGameHandler } from "./handlers/createGame";
 import { joinGameHandler } from "./handlers/joinGame";
 import { startGameHandler } from "./handlers/startGame";
@@ -32,12 +32,14 @@ import { endGameHandler } from "./handlers/endGame";
 import { resolveDuplicateCardHandler } from "./handlers/resolveDuplicateCard";
 import { disconnectHandler } from "./handlers/disconnect";
 import type { HandlerContext } from "./handlers/types";
+import { createAdminRouter } from "./admin/router";
 
 /** Remove persisted games older than this (e.g. 30 days) so storage doesn't grow forever */
 const MAX_GAME_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
@@ -58,14 +60,23 @@ const io = new Server<
   allowEIO3: true,
 });
 
-const games = new Map<string, GameState>(loadGames());
-const removed = cleanupOldGames(games, MAX_GAME_AGE_MS);
+const games = new InMemoryGameRepository();
+const removed = games.cleanup(MAX_GAME_AGE_MS);
 if (removed > 0) {
-  saveGames(games);
+  games.save();
   // eslint-disable-next-line no-console
   console.log(`Cleaned up ${removed} old game(s) (older than 30 days).`);
 }
 const playerToGame = new Map<string, string>();
+
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "admin";
+if (!process.env.ADMIN_PASSWORD) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    "WARNING: ADMIN_PASSWORD not set. Using default 'admin'. Set ADMIN_PASSWORD in production.",
+  );
+}
+app.use("/admin", createAdminRouter(games, playerToGame, io, ADMIN_PASSWORD));
 
 function broadcast(game: GameState) {
   for (const player of game.players) {
@@ -75,9 +86,6 @@ function broadcast(game: GameState) {
   }
 }
 
-function persistGames() {
-  saveGames(games);
-}
 
 function validateOptions(options: Partial<GameOptions>): GameOptions {
   const numDecks = Math.min(
@@ -111,7 +119,6 @@ io.on(
       games,
       playerToGame,
       broadcast,
-      persistGames,
       validateOptions,
     };
 

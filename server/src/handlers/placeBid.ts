@@ -6,7 +6,6 @@ export function placeBidHandler({
   socket,
   games,
   broadcast,
-  persistGames,
 }: HandlerContext) {
   return (payload: PlaceBidPayload, callback?: (r: OkErrorResponse) => void) => {
     const game = games.get(payload?.gameId) ?? null;
@@ -20,7 +19,7 @@ export function placeBidHandler({
       return;
     }
     broadcast(game);
-    persistGames();
+    games.save();
     callback?.({ ok: true });
   };
 }

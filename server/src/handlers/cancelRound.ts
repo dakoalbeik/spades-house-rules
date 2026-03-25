@@ -7,7 +7,6 @@ export function cancelRoundHandler({
   games,
   playerToGame,
   broadcast,
-  persistGames,
 }: HandlerContext) {
   return (
     payload: { gameId: string },
@@ -32,7 +31,7 @@ export function cancelRoundHandler({
       return;
     }
 
-    persistGames();
+    games.save();
     broadcast(game);
     callback?.({ ok: true });
   };

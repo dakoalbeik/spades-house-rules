@@ -7,7 +7,6 @@ export function joinGameHandler({
   games,
   playerToGame,
   broadcast,
-  persistGames,
 }: HandlerContext) {
   return (payload: JoinGamePayload, callback?: (r: GameResponse) => void) => {
     const gameIdUpper = payload?.gameId?.trim().toUpperCase();
@@ -60,7 +59,7 @@ export function joinGameHandler({
       // eslint-disable-next-line no-console
       console.log(`Player ${socket.id} (${slot.name}) rejoined game ${game.id}`);
       broadcast(game);
-      persistGames();
+      games.save();
       callback?.({ ok: true, gameId: game.id, playerId: slot.playerId });
       return;
     }
@@ -90,7 +89,7 @@ export function joinGameHandler({
     );
 
     broadcast(game);
-    persistGames();
+    games.save();
     callback?.({ ok: true, gameId: game.id, playerId: stablePlayerId });
   };
 }

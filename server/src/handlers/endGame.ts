@@ -6,7 +6,6 @@ export function endGameHandler({
   io,
   games,
   playerToGame,
-  persistGames,
 }: HandlerContext) {
   return (
     payload: { gameId: string },
@@ -37,7 +36,7 @@ export function endGameHandler({
       playerToGame.delete(p.id);
     }
     games.delete(gameId);
-    persistGames();
+    games.save();
 
     // eslint-disable-next-line no-console
     console.log(`Game ${gameId} ended by host`);
