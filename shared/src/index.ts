@@ -1,9 +1,11 @@
 export type {
   Card,
+  ChatBubble,
   CurrentTrick,
   GamePhase,
   GameStatePayload,
   PendingDuplicateChoice,
+  TrickResolution,
   PublicPlayer,
   PlayerStatus,
   Rank,

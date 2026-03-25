@@ -62,7 +62,7 @@ export default function GameBoard({
             <div className="pill dark">Round: {game.roundNumber || 1}</div>
             <div className="pill dark">
               Decks: {game.options.numDecks} &middot; {game.players.length}/
-              {game.options.maxPlayers}
+              {game.options.maxPlayers} &middot; Nil: {game.options.nilScore ?? 100}
             </div>
           </div>
           <div className="actions">

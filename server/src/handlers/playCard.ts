@@ -1,5 +1,5 @@
 import type { PlayCardPayload, OkErrorResponse } from "shared";
-import { playCard, finalizeTrick } from "../gameLogic";
+import { playCard, prepareTrickResolution, finalizeTrick } from "../gameLogic";
 import type { HandlerContext } from "./types";
 
 const TRICK_DISPLAY_DELAY_MS = 2000;
@@ -29,6 +29,9 @@ export function playCardHandler({
     // If pendingDuplicateChoice is set (mid-trick or last-card duplicate), the game
     // is paused — resolveDuplicateCardHandler will call finalizeTrick after the choice.
     if (result.trickComplete && !result.pendingDuplicateChoice) {
+      prepareTrickResolution(game);
+      broadcast(game); // clients see trickResolution → animate cards toward winner
+      persistGames();
       await new Promise<void>((r) => setTimeout(r, TRICK_DISPLAY_DELAY_MS));
       finalizeTrick(game);
       broadcast(game);

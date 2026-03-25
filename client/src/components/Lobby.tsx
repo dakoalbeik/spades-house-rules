@@ -11,11 +11,13 @@ interface LobbyProps {
   playerName: string;
   numDecks: number;
   maxPlayers: number;
+  nilScore: number;
   onGameIdChange: (id: string) => void;
   onJoinedGame?: (gameId: GameId, playerId: PlayerId) => void;
   onPlayerNameChange: (name: string) => void;
   onNumDecksChange: (decks: number) => void;
   onMaxPlayersChange: (players: number) => void;
+  onNilScoreChange: (score: number) => void;
   onError: (message: string) => void;
   onSuccess: (message: string) => void;
   isJoining: boolean;
@@ -29,11 +31,13 @@ export default function Lobby({
   playerName,
   numDecks,
   maxPlayers,
+  nilScore,
   onGameIdChange,
   onJoinedGame,
   onPlayerNameChange,
   onNumDecksChange,
   onMaxPlayersChange,
+  onNilScoreChange,
   onError,
   onSuccess,
   isJoining,
@@ -45,7 +49,7 @@ export default function Lobby({
     if (!isConnected) { onError("Not connected to server. Please wait..."); return; }
     socket.emit(
       "createGame",
-      { playerName: playerName.trim(), numDecks, maxPlayers },
+      { playerName: playerName.trim(), numDecks, maxPlayers, nilScore },
       (resp) => {
         if (!resp) { onError("No response from server"); return; }
         if (!resp.ok) { onError(resp.error || "Failed to create game"); return; }
@@ -140,6 +144,21 @@ export default function Lobby({
                   key={n}
                   className={`seg-btn${maxPlayers === n ? " active" : ""}`}
                   onClick={() => onMaxPlayersChange(n)}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="lobby-field">
+            <span className="lobby-field-label">Nil score</span>
+            <div className="seg-ctrl">
+              {[50, 100, 150, 200].map((n) => (
+                <button
+                  key={n}
+                  className={`seg-btn${nilScore === n ? " active" : ""}`}
+                  onClick={() => onNilScoreChange(n)}
                 >
                   {n}
                 </button>

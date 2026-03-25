@@ -1,4 +1,5 @@
-import type { GameState, PublicPlayer } from "../types";
+import { useEffect, useState } from "react";
+import type { ChatBubble, GameState, PublicPlayer } from "../types";
 import OpponentFan from "./OpponentFan";
 import TrickPile from "./TrickPile";
 import { avatarColor } from "../utils/avatarColor";
@@ -23,6 +24,39 @@ function SeatRatio({ phase, bid, tricks }: { phase: string; bid: number | undefi
   return <span className="seat-ratio">{tricks}/{bid}</span>;
 }
 
+/** Tracks which bubbles are currently visible, hiding timed ones when they expire. */
+function useChatBubbles(incoming: Record<string, ChatBubble> | undefined) {
+  const [visible, setVisible] = useState<Record<string, ChatBubble>>({});
+
+  useEffect(() => {
+    const now = Date.now();
+    const next: Record<string, ChatBubble> = {};
+    for (const [pid, bubble] of Object.entries(incoming ?? {})) {
+      if (bubble.clearOn === "trick_end" || (bubble.clearOn as number) > now) {
+        next[pid] = bubble;
+      }
+    }
+    setVisible(next);
+
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (const [pid, bubble] of Object.entries(next)) {
+      if (typeof bubble.clearOn === "number") {
+        const delay = (bubble.clearOn as number) - now;
+        timers.push(
+          setTimeout(() => setVisible((prev) => {
+            const copy = { ...prev };
+            delete copy[pid];
+            return copy;
+          }), delay),
+        );
+      }
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [incoming]);
+
+  return visible;
+}
+
 export default function GameTable({ game, myPlayer }: GameTableProps) {
   const players = game.players;
   const isPlaying = game.phase === "playing";
@@ -43,6 +77,7 @@ export default function GameTable({ game, myPlayer }: GameTableProps) {
 
   const opponents = players.slice(1);
   const positions = getPositions(opponents.length);
+  const bubbles = useChatBubbles(game.chatBubbles);
 
   // Map seat index to a position area for the trick pile
   const seatToArea = (seatIndex: number): Area => {
@@ -91,6 +126,12 @@ export default function GameTable({ game, myPlayer }: GameTableProps) {
                   <OpponentFan cardCount={opp.cardCount} position={position} />
                 </div>
               )}
+
+              {bubbles[opp.playerId] && (
+                <div className="chat-bubble" key={bubbles[opp.playerId]!.message}>
+                  {bubbles[opp.playerId]!.message}
+                </div>
+              )}
             </div>
           );
         })}
@@ -102,6 +143,7 @@ export default function GameTable({ game, myPlayer }: GameTableProps) {
               plays={trick.plays}
               players={players}
               seatToArea={seatToArea}
+              winnerId={game.trickResolution?.winnerId}
             />
           )}
         </div>
@@ -111,20 +153,27 @@ export default function GameTable({ game, myPlayer }: GameTableProps) {
           className={`table-seat table-seat-bottom ${0 === currentTurnSeat ? "current-turn" : ""}`}
         >
           {players[0] && (
-            <div className="seat-label">
-              <div className="seat-avatar" style={{ background: avatarColor(players[0].name) }}>
-                {players[0].name.trim()[0]?.toUpperCase() ?? "?"}
+            <>
+              <div className="seat-label">
+                <div className="seat-avatar" style={{ background: avatarColor(players[0].name) }}>
+                  {players[0].name.trim()[0]?.toUpperCase() ?? "?"}
+                </div>
+                <span className="seat-name">
+                  {players[0].name}
+                  {myPlayer?.playerId === players[0].playerId && (
+                    <span className="you-label"> (You)</span>
+                  )}
+                </span>
+                <SeatRatio phase={game.phase} bid={players[0].bid} tricks={players[0].tricks} />
+                {players[0].isHost && <span className="host-badge">Host</span>}
+                {players[0].status === "left" && <span className="left-badge">Left</span>}
               </div>
-              <span className="seat-name">
-                {players[0].name}
-                {myPlayer?.playerId === players[0].playerId && (
-                  <span className="you-label"> (You)</span>
-                )}
-              </span>
-              <SeatRatio phase={game.phase} bid={players[0].bid} tricks={players[0].tricks} />
-              {players[0].isHost && <span className="host-badge">Host</span>}
-              {players[0].status === "left" && <span className="left-badge">Left</span>}
-            </div>
+              {bubbles[players[0].playerId] && (
+                <div className="chat-bubble" key={bubbles[players[0].playerId]!.message}>
+                  {bubbles[players[0].playerId]!.message}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

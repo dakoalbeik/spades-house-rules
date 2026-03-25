@@ -88,7 +88,8 @@ function validateOptions(options: Partial<GameOptions>): GameOptions {
     Math.max(options.maxPlayers ?? 4, MIN_PLAYERS),
     MAX_PLAYERS,
   );
-  return { numDecks, maxPlayers };
+  const nilScore = Math.max(0, Math.round(options.nilScore ?? 100));
+  return { numDecks, maxPlayers, nilScore };
 }
 
 io.on(

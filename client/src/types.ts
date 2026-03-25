@@ -4,6 +4,7 @@
  */
 export type {
   Card,
+  ChatBubble,
   CurrentTrick,
   GamePhase,
   GameStatePayload as GameState,

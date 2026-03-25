@@ -43,11 +43,22 @@ function App() {
   const [playerName, setPlayerName] = useState(() => getPlayerName() || "");
   const [numDecks, setNumDecks] = useState(1);
   const [maxPlayers, setMaxPlayers] = useState(4);
+  const [nilScore, setNilScore] = useState(100);
   const [game, setGame] = useState<GameState | null>(null);
   const { toasts, dismiss, showError, showSuccess } = useToast();
   const [status, setStatus] = useState("Connecting...");
   const [isJoining, setIsJoining] = useState(false);
   const [isRejoining, setIsRejoining] = useState(false);
+
+  // Update document title to reflect host status
+  useEffect(() => {
+    const isHost = game?.players.find((p) => p.isSelf)?.isHost;
+    if (isHost) {
+      document.title = "Spades — Host";
+    } else {
+      document.title = "Spades";
+    }
+  }, [game]);
 
   // Save gameId and playerName to sessionStorage when they change
   useEffect(() => {
@@ -276,11 +287,13 @@ function App() {
           playerName={playerName}
           numDecks={numDecks}
           maxPlayers={maxPlayers}
+          nilScore={nilScore}
           onGameIdChange={handleGameIdChange}
           onJoinedGame={handleJoinedGame}
           onPlayerNameChange={handlePlayerNameChange}
           onNumDecksChange={setNumDecks}
           onMaxPlayersChange={setMaxPlayers}
+          onNilScoreChange={setNilScore}
           onError={handleError}
           onSuccess={handleSuccess}
           isJoining={isJoining}

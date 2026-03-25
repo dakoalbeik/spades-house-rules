@@ -11,6 +11,7 @@ export interface CreateGamePayload {
   playerName?: string;
   numDecks?: number;
   maxPlayers?: number;
+  nilScore?: number;
 }
 
 export interface JoinGamePayload {

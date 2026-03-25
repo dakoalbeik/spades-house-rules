@@ -19,10 +19,19 @@ export default function BiddingPanel({
   // Only show the picker during this player's own bidding turn
   if (myPlayer.playerId !== game.currentTurnPlayerId) return null;
 
+  const nilScore = game.options.nilScore ?? 100;
+
   return (
     <div className="bid-panel">
       <span className="bid-label">Your bid</span>
       <div className="bid-options">
+        <button
+          className="bid-btn bid-nil"
+          onClick={() => onBid(0)}
+          title={`+${nilScore} if you take no tricks, −${nilScore} otherwise`}
+        >
+          Nil
+        </button>
         {hand.map((card, index) => {
           const bid = index + 1;
           return (

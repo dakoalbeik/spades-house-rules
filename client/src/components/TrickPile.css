@@ -1,11 +1,11 @@
 /* ── Container ───────────────────────────────────────────────────
    Card "small" = 60px wide × ~84px tall.
-   Cards overlap slightly toward the center.
+   Cards are spaced well clear of each other.
    Container is tall enough to prevent vertical clip.          */
 .trick-pile {
   position: relative;
-  width: 130px;
-  height: 180px;
+  width: 180px;
+  height: 240px;
   flex-shrink: 0;
 }
 
@@ -15,28 +15,28 @@
 
 /* ── Static positions ────────────────────────────────────────── */
 
-/* top/bot: centered horizontally, 10px from edge → 8px overlap */
+/* top/bot: centered horizontally, 8px from edge → ~40px clear gap */
 .trick-pile-card-top {
-  top: 10px;
+  top: 8px;
   left: 50%;
   transform: translateX(-50%);
 }
 
 .trick-pile-card-bot {
-  bottom: 10px;
+  bottom: 8px;
   left: 50%;
   transform: translateX(-50%);
 }
 
-/* left/right: centered vertically, 10px from edge → 10px overlap */
+/* left/right: centered vertically, 8px from edge → ~32px clear gap */
 .trick-pile-card-left {
-  left: 10px;
+  left: 8px;
   top: 50%;
   transform: translateY(-50%);
 }
 
 .trick-pile-card-right {
-  right: 10px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
 }
@@ -72,7 +72,7 @@
 
 @keyframes trick-from-top {
   from {
-    transform: translateX(-50%) translateY(-90px);
+    transform: translateX(-50%) translateY(-110px);
     opacity: 0;
   }
   to {
@@ -83,7 +83,7 @@
 
 @keyframes trick-from-bot {
   from {
-    transform: translateX(-50%) translateY(90px);
+    transform: translateX(-50%) translateY(110px);
     opacity: 0;
   }
   to {
@@ -94,7 +94,7 @@
 
 @keyframes trick-from-left {
   from {
-    transform: translateX(-90px) translateY(-50%);
+    transform: translateX(-110px) translateY(-50%);
     opacity: 0;
   }
   to {
@@ -105,7 +105,7 @@
 
 @keyframes trick-from-right {
   from {
-    transform: translateX(90px) translateY(-50%);
+    transform: translateX(110px) translateY(-50%);
     opacity: 0;
   }
   to {
@@ -129,3 +129,34 @@
 .trick-pile-card .card-image {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
 }
+
+/* ── Winner highlight ─────────────────────────────────────────── */
+
+.trick-pile-card-winner .card-image {
+  box-shadow:
+    0 0 0 2px #fbbf24,
+    0 0 18px 6px rgba(251, 191, 36, 0.6),
+    0 4px 16px rgba(0, 0, 0, 0.6);
+  animation: winner-pulse 0.5s ease-out 0s 2 alternate both;
+}
+
+@keyframes winner-pulse {
+  from { box-shadow: 0 0 0 2px #fbbf24, 0 0 12px 4px rgba(251,191,36,0.4), 0 4px 16px rgba(0,0,0,0.6); }
+  to   { box-shadow: 0 0 0 3px #fcd34d, 0 0 28px 10px rgba(251,191,36,0.7), 0 4px 16px rgba(0,0,0,0.6); }
+}
+
+/* ── Collect animations (separate `translate` property, no conflict with transform) ── */
+/* Cards fly toward the winner's seat. Uses the CSS `translate` property so it
+   doesn't override the `transform` that handles each card's static position.   */
+
+.trick-pile[data-collecting] .trick-pile-card {
+  transition: translate 0.55s cubic-bezier(0.4, 0, 1, 1),
+              opacity   0.55s cubic-bezier(0.4, 0, 1, 1);
+  transition-delay: 0.15s; /* brief pause after winner glow */
+}
+
+.trick-pile[data-collecting="top"] .trick-pile-card    { translate: 0 -140px; opacity: 0; }
+.trick-pile[data-collecting="bot"] .trick-pile-card    { translate: 0  140px; opacity: 0; }
+.trick-pile[data-collecting="left"] .trick-pile-card   { translate: -140px 0; opacity: 0; }
+.trick-pile[data-collecting="right"] .trick-pile-card  { translate:  140px 0; opacity: 0; }
+.trick-pile[data-collecting="center"] .trick-pile-card { translate: 0 0; opacity: 0; }

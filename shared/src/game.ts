@@ -44,6 +44,13 @@ export interface CurrentTrick {
   plays: TrickPlay[];
 }
 
+/** Broadcast between "all cards played" and "trick cleared" so clients can animate.
+ *  The trick's plays are still present in currentTrick during this window. */
+export interface TrickResolution {
+  winnerId: PlayerId;
+  winnerName: string;
+}
+
 /** Set when the last card played duplicates an earlier card (same rank+suit).
  *  The identified player must choose "win" or "lose" before the trick resolves. */
 export interface PendingDuplicateChoice {
@@ -54,6 +61,14 @@ export interface PendingDuplicateChoice {
 }
 
 export type GamePhase = "lobby" | "bidding" | "playing" | "round_end";
+
+/** A speech bubble shown near a player's name.
+ *  clearOn: "trick_end" = cleared when the trick finalizes;
+ *           number      = unix timestamp (ms) after which it is no longer shown. */
+export interface ChatBubble {
+  message: string;
+  clearOn: "trick_end" | number;
+}
 
 export type PlayerStatus = "active" | "left";
 
@@ -84,6 +99,10 @@ export interface GameStatePayload {
   currentTurnPlayerId: PlayerId | null;
   /** Present when a player must choose to win or lose a trick due to a duplicate card */
   pendingDuplicateChoice?: PendingDuplicateChoice;
+  /** Set during the delay between trick completion and trick clearance, for client animations */
+  trickResolution?: TrickResolution;
+  /** Chat bubbles to show near each player; keyed by playerId */
+  chatBubbles?: Record<string, ChatBubble>;
 }
 
 export interface PlayerState {
@@ -101,6 +120,8 @@ export interface PlayerState {
 export type GameOptions = {
   numDecks: number;
   maxPlayers: number;
+  /** Points awarded for a made nil bid, deducted for a failed one */
+  nilScore: number;
 };
 
 export interface GameState {
@@ -120,6 +141,10 @@ export interface GameState {
   pendingDuplicateChoice?: PendingDuplicateChoice;
   /** Stored after the player makes their duplicate choice; used by finalizeTrick for tie-breaking */
   resolvedDuplicateChoice?: { lastDuplicatePlayerId: PlayerId; choice: "win" | "lose" };
+  /** Set during the delay between trick completion and trick clearance, for client animations */
+  trickResolution?: TrickResolution;
+  /** Chat bubbles shown near each player; keyed by playerId string */
+  chatBubbles: Record<string, ChatBubble>;
 }
 
 export interface SerializedGame {
@@ -134,4 +159,8 @@ export interface SerializedGame {
   statusMessage?: string;
   currentTurnPlayerId: PlayerId | null;
   pendingDuplicateChoice?: PendingDuplicateChoice;
+  /** Set during the delay between trick completion and trick clearance, for client animations */
+  trickResolution?: TrickResolution;
+  /** Chat bubbles to show near each player; keyed by playerId */
+  chatBubbles?: Record<string, ChatBubble>;
 }

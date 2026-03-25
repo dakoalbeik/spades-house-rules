@@ -1,5 +1,5 @@
 import type { ResolveDuplicateCardPayload, OkErrorResponse } from "shared";
-import { resolveDuplicateCard, finalizeTrick } from "../gameLogic";
+import { resolveDuplicateCard, prepareTrickResolution, finalizeTrick } from "../gameLogic";
 import type { HandlerContext } from "./types";
 
 const TRICK_DISPLAY_DELAY_MS = 2000;
@@ -32,8 +32,11 @@ export function resolveDuplicateCardHandler({
     callback?.({ ok: true });
 
     // If the trick was already complete (duplicate was the last card played),
-    // finalize it now after a brief display delay
+    // finalize it now: prepare resolution first so clients can animate
     if (result.trickComplete) {
+      prepareTrickResolution(game);
+      broadcast(game); // clients see trickResolution → animate cards toward winner
+      persistGames();
       await new Promise<void>((r) => setTimeout(r, TRICK_DISPLAY_DELAY_MS));
       finalizeTrick(game);
       broadcast(game);

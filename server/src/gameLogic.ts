@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import type {
   Card,
+  ChatBubble,
   CurrentTrick,
   GameOptions,
   GamePhase,
@@ -52,6 +53,15 @@ export const MIN_PLAYERS = 2;
 export const MAX_PLAYERS = 6;
 export const MIN_DECKS = 1;
 export const MAX_DECKS = 3;
+
+function addChatBubble(
+  game: GameState,
+  playerId: PlayerId,
+  message: string,
+  clearOn: ChatBubble["clearOn"],
+): void {
+  game.chatBubbles[playerId] = { message, clearOn };
+}
 
 export function generateGameId(): GameId {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -168,9 +178,17 @@ function determineTrickWinner(
 }
 
 function scoreRound(game: GameState): void {
+  const nilScore = game.options.nilScore ?? 100;
   for (const player of game.players) {
     const bid = player.bid ?? 0;
-    if (player.tricks >= bid) {
+    if (bid === 0) {
+      // Nil: full bonus for zero tricks taken, full penalty otherwise
+      if (player.tricks === 0) {
+        player.score += nilScore;
+      } else {
+        player.score -= nilScore;
+      }
+    } else if (player.tricks >= bid) {
       player.score += bid * 10 + (player.tricks - bid);
     } else {
       player.score -= bid * 10;
@@ -207,6 +225,16 @@ export function serializeGame(
   const orderedPlayers = game.players
     .slice(viewerIndex)
     .concat(game.players.slice(0, viewerIndex));
+
+  // Only send bubbles that haven't expired yet
+  const now = Date.now();
+  const activeBubbles: Record<string, ChatBubble> = {};
+  for (const [pid, bubble] of Object.entries(game.chatBubbles)) {
+    if (bubble.clearOn === "trick_end" || (bubble.clearOn as number) > now) {
+      activeBubbles[pid] = bubble;
+    }
+  }
+
   return {
     id: game.id,
     phase: game.phase,
@@ -217,6 +245,8 @@ export function serializeGame(
     statusMessage: game.statusMessage,
     currentTurnPlayerId: currentTurn,
     pendingDuplicateChoice: game.pendingDuplicateChoice,
+    trickResolution: game.trickResolution,
+    chatBubbles: activeBubbles,
     hand: viewer ? sortHand(viewer.hand) : [],
     players: orderedPlayers.map((p) => ({
       id: p.id,
@@ -266,6 +296,7 @@ export function createGame(
     roundNumber: 0,
     statusMessage: "Waiting for players...",
     createdAt: Date.now(),
+    chatBubbles: {},
   };
 }
 
@@ -324,6 +355,9 @@ export function placeBid(
 
   player.bid = bid;
   game.bidIndex += 1;
+
+  const bidMessage = bid === 0 ? "Going nil!" : `I bid ${bid}`;
+  addChatBubble(game, player.playerId, bidMessage, Date.now() + 5000);
 
   if (game.bidIndex >= game.players.length) {
     game.phase = "playing";
@@ -430,12 +464,31 @@ function applyTrickWinner(game: GameState, winnerId: PlayerId): void {
   game.currentTrick = { leaderId: winnerId, plays: [] };
 }
 
-/** Resolve the completed trick: award it, then start the next trick or score the round. */
-export function finalizeTrick(game: GameState): void {
+/** Computes the trick winner and stores it in `game.trickResolution` so the client
+ *  can animate cards toward the winner before the trick is cleared.
+ *  Always call this first, broadcast, wait, then call finalizeTrick. */
+export function prepareTrickResolution(game: GameState): void {
   if (!game.currentTrick || game.currentTrick.plays.length === 0) return;
-  const override = game.resolvedDuplicateChoice;
+  const winnerId = determineTrickWinner(
+    game.currentTrick,
+    game.resolvedDuplicateChoice,
+  );
+  const winner = game.players.find((p) => p.playerId === winnerId);
+  game.trickResolution = { winnerId, winnerName: winner?.name ?? "" };
+}
+
+/** Clears the trick and awards the winner pre-computed by prepareTrickResolution. */
+export function finalizeTrick(game: GameState): void {
+  if (!game.currentTrick || !game.trickResolution) return;
+  const { winnerId } = game.trickResolution;
+  game.trickResolution = undefined;
   game.resolvedDuplicateChoice = undefined;
-  const winnerId = determineTrickWinner(game.currentTrick, override);
+  // Clear bubbles that should disappear when the trick ends
+  for (const key of Object.keys(game.chatBubbles)) {
+    if (game.chatBubbles[key]?.clearOn === "trick_end") {
+      delete game.chatBubbles[key];
+    }
+  }
   applyTrickWinner(game, winnerId);
 }
 
@@ -464,6 +517,9 @@ export function resolveDuplicateCard(
   // Store so finalizeTrick can use it when the trick ends
   game.resolvedDuplicateChoice = { lastDuplicatePlayerId, choice };
 
+  const dupeMessage = choice === "win" ? "I'll take it!" : "You can have it";
+  addChatBubble(game, player.playerId, dupeMessage, "trick_end");
+
   const trickComplete = game.currentTrick.plays.length === game.players.length;
   return { ok: true, trickComplete };
 }
@@ -490,6 +546,10 @@ export function cancelRound(
     player.tricks = 0;
   }
   game.currentTrick = undefined;
+  game.trickResolution = undefined;
+  game.pendingDuplicateChoice = undefined;
+  game.resolvedDuplicateChoice = undefined;
+  game.chatBubbles = {};
   game.phase = "round_end";
   game.statusMessage = "Round dismissed by host — no scores counted.";
   return { ok: true };
@@ -676,6 +736,10 @@ export function removePlayer(game: GameState, socketId: string): void {
     }
     game.phase = "lobby";
     game.currentTrick = undefined;
+    game.trickResolution = undefined;
+    game.pendingDuplicateChoice = undefined;
+    game.resolvedDuplicateChoice = undefined;
+    game.chatBubbles = {};
     game.spadesBroken = false;
     game.bidIndex = 0;
     game.statusMessage = "A player left. Returning to lobby.";
