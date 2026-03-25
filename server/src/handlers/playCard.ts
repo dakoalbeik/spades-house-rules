@@ -10,13 +10,16 @@ export function playCardHandler({
   connections,
   broadcast,
 }: HandlerContext) {
-  return async (payload: PlayCardPayload, callback?: (r: OkErrorResponse) => void) => {
+  return async (
+    payload: PlayCardPayload,
+    callback?: (r: OkErrorResponse) => void,
+  ) => {
     const game = games.get(payload?.gameId) ?? null;
     if (!game) {
       callback?.({ ok: false, error: "Game not found" });
       return;
     }
-    if (!connections.isSocketInGame(socket.id as SocketId, game.id)) {
+    if (!connections.isSocketInGame(socket.id, game.id)) {
       callback?.({ ok: false, error: "Not in this game" });
       return;
     }

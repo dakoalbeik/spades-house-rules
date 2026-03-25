@@ -9,7 +9,10 @@ export function kickPlayerHandler({
   connections,
   broadcast,
 }: HandlerContext) {
-  return (payload: KickPlayerPayload, callback?: (r: OkErrorResponse) => void) => {
+  return (
+    payload: KickPlayerPayload,
+    callback?: (r: OkErrorResponse) => void,
+  ) => {
     const gameId = payload?.gameId?.trim().toUpperCase();
     if (!gameId) {
       callback?.({ ok: false, error: "Game ID is required" });
@@ -24,8 +27,10 @@ export function kickPlayerHandler({
       callback?.({ ok: false, error: "Can only kick players in the lobby" });
       return;
     }
-    const requesterId = connections.getPlayerForSocket(socket.id as SocketId);
-    const requester = requesterId ? game.players.find((p) => p.playerId === requesterId) : undefined;
+    const requesterId = connections.getPlayerForSocket(socket.id);
+    const requester = requesterId
+      ? game.players.find((p) => p.playerId === requesterId)
+      : undefined;
     if (!requester?.isHost) {
       callback?.({ ok: false, error: "Only the host can kick players" });
       return;

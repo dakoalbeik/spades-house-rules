@@ -8,14 +8,19 @@ export function startGameHandler({
   connections,
   broadcast,
 }: HandlerContext) {
-  return (payload: StartGamePayload, callback?: (r: OkErrorResponse) => void) => {
+  return (
+    payload: StartGamePayload,
+    callback?: (r: OkErrorResponse) => void,
+  ) => {
     const game = games.get(payload?.gameId) ?? null;
     if (!game) {
       callback?.({ ok: false, error: "Game not found" });
       return;
     }
-    const playerId = connections.getPlayerForSocket(socket.id as SocketId);
-    const hostPlayer = playerId ? game.players.find((p) => p.playerId === playerId) : undefined;
+    const playerId = connections.getPlayerForSocket(socket.id);
+    const hostPlayer = playerId
+      ? game.players.find((p) => p.playerId === playerId)
+      : undefined;
     if (!hostPlayer?.isHost) {
       callback?.({ ok: false, error: "Only host can start" });
       return;

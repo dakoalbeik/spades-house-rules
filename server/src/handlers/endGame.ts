@@ -18,8 +18,10 @@ export function endGameHandler({
       return;
     }
 
-    const requesterId = connections.getPlayerForSocket(socket.id as SocketId);
-    const player = requesterId ? game.players.find((p) => p.playerId === requesterId) : undefined;
+    const requesterId = connections.getPlayerForSocket(socket.id);
+    const player = requesterId
+      ? game.players.find((p) => p.playerId === requesterId)
+      : undefined;
     if (!player?.isHost) {
       callback?.({ ok: false, error: "Only the host can end the game" });
       return;

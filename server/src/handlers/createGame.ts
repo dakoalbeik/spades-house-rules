@@ -21,7 +21,7 @@ export function createGameHandler({
       game = createGame(socket.id, name, options);
     }
     games.set(game.id, game);
-    connections.register(socket.id as SocketId, game.players[0].playerId, game.id);
+    connections.register(socket.id, game.players[0].playerId, game.id);
     socket.join(game.id);
     broadcast(game);
     games.save();

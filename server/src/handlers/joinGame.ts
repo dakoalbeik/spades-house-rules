@@ -16,7 +16,9 @@ export function joinGameHandler({
     }
 
     // eslint-disable-next-line no-console
-    console.log(`Join attempt: ${socket.id} trying to join game ${gameIdUpper}`);
+    console.log(
+      `Join attempt: ${socket.id} trying to join game ${gameIdUpper}`,
+    );
 
     const game = games.get(gameIdUpper) ?? null;
     if (!game) {
@@ -26,7 +28,7 @@ export function joinGameHandler({
       return;
     }
 
-    const existingPlayerId = connections.getPlayerForSocket(socket.id as SocketId);
+    const existingPlayerId = connections.getPlayerForSocket(socket.id);
     const alreadyInGame = existingPlayerId
       ? game.players.find((p) => p.playerId === existingPlayerId)
       : undefined;
@@ -34,7 +36,11 @@ export function joinGameHandler({
       // eslint-disable-next-line no-console
       console.log(`Player ${socket.id} already in game ${gameIdUpper}`);
       broadcast(game);
-      callback?.({ ok: true, gameId: game.id, playerId: alreadyInGame.playerId });
+      callback?.({
+        ok: true,
+        gameId: game.id,
+        playerId: alreadyInGame.playerId,
+      });
       return;
     }
 
@@ -43,7 +49,8 @@ export function joinGameHandler({
 
     if (game.phase !== "lobby") {
       const slot =
-        (rejoinPlayerId && game.players.find((p) => p.playerId === rejoinPlayerId)) ||
+        (rejoinPlayerId &&
+          game.players.find((p) => p.playerId === rejoinPlayerId)) ||
         game.players.find((p) => p.name === name);
       if (!slot) {
         callback?.({
@@ -57,10 +64,12 @@ export function joinGameHandler({
 
       slot.id = socket.id;
       slot.status = "active";
-      connections.register(socket.id as SocketId, slot.playerId, game.id);
+      connections.register(socket.id, slot.playerId, game.id);
       socket.join(game.id);
       // eslint-disable-next-line no-console
-      console.log(`Player ${socket.id} (${slot.name}) rejoined game ${game.id}`);
+      console.log(
+        `Player ${socket.id} (${slot.name}) rejoined game ${game.id}`,
+      );
       broadcast(game);
       games.save();
       callback?.({ ok: true, gameId: game.id, playerId: slot.playerId });
@@ -83,7 +92,7 @@ export function joinGameHandler({
       isHost: false,
       status: "active",
     });
-    connections.register(socket.id as SocketId, stablePlayerId, game.id);
+    connections.register(socket.id, stablePlayerId, game.id);
     socket.join(game.id);
 
     // eslint-disable-next-line no-console

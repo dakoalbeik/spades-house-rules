@@ -19,8 +19,10 @@ export function cancelRoundHandler({
       return;
     }
 
-    const playerId = connections.getPlayerForSocket(socket.id as SocketId);
-    const player = playerId ? game.players.find((p) => p.playerId === playerId) : undefined;
+    const playerId = connections.getPlayerForSocket(socket.id);
+    const player = playerId
+      ? game.players.find((p) => p.playerId === playerId)
+      : undefined;
     if (!player?.isHost) {
       callback?.({ ok: false, error: "Only the host can dismiss a round" });
       return;

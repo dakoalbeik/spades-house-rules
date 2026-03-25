@@ -9,10 +9,10 @@ export function disconnectHandler({
   broadcast,
 }: HandlerContext) {
   return () => {
-    const playerId = connections.getPlayerForSocket(socket.id as SocketId);
+    const playerId = connections.getPlayerForSocket(socket.id);
     if (!playerId) return;
     const gameId = connections.getGameForPlayer(playerId);
-    const { remainingSockets } = connections.unregisterSocket(socket.id as SocketId);
+    const { remainingSockets } = connections.unregisterSocket(socket.id);
 
     // Player still connected on another tab/device — no game-state change needed
     if (remainingSockets > 0) return;

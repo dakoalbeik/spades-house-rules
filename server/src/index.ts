@@ -31,7 +31,7 @@ import { cancelRoundHandler } from "./handlers/cancelRound";
 import { endGameHandler } from "./handlers/endGame";
 import { resolveDuplicateCardHandler } from "./handlers/resolveDuplicateCard";
 import { disconnectHandler } from "./handlers/disconnect";
-import type { HandlerContext } from "./handlers/types";
+import type { AppSocket, HandlerContext } from "./handlers/types";
 import { createAdminRouter } from "./admin/router";
 import { AutoAdvanceScheduler } from "./games/AutoAdvanceScheduler";
 import { ConnectionRegistry } from "./connections/ConnectionRegistry";
@@ -90,9 +90,15 @@ if (!process.env.ADMIN_PASSWORD) {
 }
 app.use(
   "/admin",
-  createAdminRouter(games, connections, io, ADMIN_PASSWORD, scheduler, broadcast),
+  createAdminRouter(
+    games,
+    connections,
+    io,
+    ADMIN_PASSWORD,
+    scheduler,
+    broadcast,
+  ),
 );
-
 
 function validateOptions(options: Partial<GameOptions>): GameOptions {
   const numDecks = Math.min(
@@ -107,47 +113,38 @@ function validateOptions(options: Partial<GameOptions>): GameOptions {
   return { numDecks, maxPlayers, nilScore };
 }
 
-io.on(
-  "connection",
-  (
-    socket: Socket<
-      ClientToServerEvents,
-      ServerToClientEvents,
-      InterServerEvents,
-      SocketData
-    >,
-  ) => {
+io.on("connection", (s: Socket) => {
+  const socket = s as unknown as AppSocket;
+  // eslint-disable-next-line no-console
+  console.log(`Client connected: ${socket.id}`);
+
+  const ctx: HandlerContext = {
+    socket,
+    io,
+    games,
+    connections,
+    broadcast,
+    validateOptions,
+  };
+
+  socket.on("createGame", createGameHandler(ctx));
+  socket.on("joinGame", joinGameHandler(ctx));
+  socket.on("startGame", startGameHandler(ctx));
+  socket.on("placeBid", placeBidHandler(ctx));
+  socket.on("playCard", playCardHandler(ctx));
+  socket.on("startNextRound", startNextRoundHandler(ctx));
+  socket.on("requestState", requestStateHandler(ctx));
+  socket.on("kickPlayer", kickPlayerHandler(ctx));
+  socket.on("leaveGame", leaveGameHandler(ctx));
+  socket.on("cancelRound", cancelRoundHandler(ctx));
+  socket.on("endGame", endGameHandler(ctx));
+  socket.on("resolveDuplicateCard", resolveDuplicateCardHandler(ctx));
+  socket.on("disconnect", disconnectHandler(ctx));
+  socket.on("disconnect", () => {
     // eslint-disable-next-line no-console
-    console.log(`Client connected: ${socket.id}`);
-
-    const ctx: HandlerContext = {
-      socket,
-      io,
-      games,
-      connections,
-      broadcast,
-      validateOptions,
-    };
-
-    socket.on("createGame", createGameHandler(ctx));
-    socket.on("joinGame", joinGameHandler(ctx));
-    socket.on("startGame", startGameHandler(ctx));
-    socket.on("placeBid", placeBidHandler(ctx));
-    socket.on("playCard", playCardHandler(ctx));
-    socket.on("startNextRound", startNextRoundHandler(ctx));
-    socket.on("requestState", requestStateHandler(ctx));
-    socket.on("kickPlayer", kickPlayerHandler(ctx));
-    socket.on("leaveGame", leaveGameHandler(ctx));
-    socket.on("cancelRound", cancelRoundHandler(ctx));
-    socket.on("endGame", endGameHandler(ctx));
-    socket.on("resolveDuplicateCard", resolveDuplicateCardHandler(ctx));
-    socket.on("disconnect", disconnectHandler(ctx));
-    socket.on("disconnect", () => {
-      // eslint-disable-next-line no-console
-      console.log(`Client disconnected: ${socket.id}`);
-    });
-  },
-);
+    console.log(`Client disconnected: ${socket.id}`);
+  });
+});
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
 const HOST = "0.0.0.0";

@@ -20,7 +20,7 @@ export function leaveGameHandler({
       return;
     }
 
-    const playerId = connections.getPlayerForSocket(socket.id as SocketId);
+    const playerId = connections.getPlayerForSocket(socket.id);
     if (!playerId) {
       callback?.({ ok: false, error: "Not in this game" });
       return;
