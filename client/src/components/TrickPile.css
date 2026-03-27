@@ -160,3 +160,17 @@
 .trick-pile[data-collecting="left"] .trick-pile-card   { translate: -140px 0; opacity: 0; }
 .trick-pile[data-collecting="right"] .trick-pile-card  { translate:  140px 0; opacity: 0; }
 .trick-pile[data-collecting="center"] .trick-pile-card { translate: 0 0; opacity: 0; }
+
+@media (max-width: 600px) {
+  .trick-pile {
+    width: 138px;
+    height: 184px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .trick-pile {
+    width: 100px;
+    height: 136px;
+  }
+}

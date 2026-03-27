@@ -10,8 +10,6 @@ interface HandProps {
   canPlay: (cardId: CardId) => boolean;
 }
 
-const OFFSET = 36; // horizontal offset per card (px)
-
 export default function Hand({
   game,
   isMyTurn,
@@ -20,7 +18,15 @@ export default function Hand({
 }: HandProps) {
   const sortedHand = game.hand;
   const count = sortedHand.length;
-  const handWidth = count > 0 ? (count - 1) * OFFSET + 80 : 80;
+
+  const isLandscapeMobile = window.innerWidth > window.innerHeight && window.innerHeight < 500;
+  const isMobile = window.innerWidth < 600;
+  const isSmall = isMobile || isLandscapeMobile;
+  const CARD_W = isLandscapeMobile ? 44 : isSmall ? 60 : 80;
+  const OFFSET = isLandscapeMobile ? 20 : isSmall ? 26 : 36;
+  const cardSize = isSmall ? "small" : "medium";
+
+  const handWidth = count > 0 ? (count - 1) * OFFSET + CARD_W : CARD_W;
 
   return (
     <div className="hand-outer">
@@ -45,6 +51,7 @@ export default function Hand({
             >
               <Card
                 card={card}
+                size={cardSize}
                 onClick={() => onPlayCard(card.id)}
                 disabled={!canPlay(card.id)}
               />

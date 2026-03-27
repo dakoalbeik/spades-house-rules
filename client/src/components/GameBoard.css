@@ -24,7 +24,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 360px;
+  min-height: 220px;
   overflow: visible;
 }
 
@@ -32,8 +32,6 @@
 .game-board-footer {
   position: sticky;
   bottom: 0;
-  background: #090e18;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
   padding: 10px 0 12px;
   display: flex;
   flex-direction: column;
@@ -61,43 +59,63 @@
 
 .actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  align-items: center;
 }
 
-.btn-scores {
-  background: #1e293b;
-  color: #cbd5e1;
+/* ── Icon action buttons ───────────────────────────────────────── */
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0 !important;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 120ms ease, transform 120ms ease, border-color 120ms ease;
 }
 
-.btn-scores:hover {
+.btn-icon:hover {
+  transform: translateY(-1px);
+}
+
+.btn-icon-neutral {
+  background: #1e293b;
+  color: #94a3b8;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.btn-icon-neutral:hover {
   background: #334155;
+  color: #e2e8f0;
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
-.btn-leave {
-  background: #7f1d1d;
-  color: #fecaca;
+.btn-icon-primary {
+  background: linear-gradient(135deg, #1d4ed8, #16a34a);
+  color: #fff;
+  border-color: transparent;
+}
+.btn-icon-primary:hover {
+  filter: brightness(1.15);
 }
 
-.btn-leave:hover {
-  background: #991b1b;
-}
-
-.btn-cancel-round {
+.btn-icon-warn {
   background: #78350f;
   color: #fef3c7;
+  border-color: transparent;
 }
-
-.btn-cancel-round:hover {
+.btn-icon-warn:hover {
   background: #92400e;
 }
 
-.btn-end-game {
+.btn-icon-danger {
   background: #7f1d1d;
   color: #fecaca;
+  border-color: transparent;
 }
-
-.btn-end-game:hover {
+.btn-icon-danger:hover {
   background: #991b1b;
 }
 
@@ -168,4 +186,46 @@
 
 .btn-lose:hover {
   background: #991b1b;
+}
+
+@media (max-width: 600px) {
+  .game-board-header {
+    padding: 3px 0 5px;
+    gap: 3px;
+  }
+
+  .game-board-footer {
+    padding: 6px 0 8px;
+    gap: 5px;
+  }
+
+  .row.spaced {
+    flex-wrap: wrap;
+  }
+
+  .btn-icon {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .game-board-header {
+    padding: 2px 0 2px;
+    gap: 2px;
+  }
+
+  .game-board-footer {
+    padding: 3px 0 4px;
+    gap: 3px;
+  }
+
+  .game-board-play-area {
+    min-height: 100px;
+  }
+
+  .info {
+    padding: 4px 10px;
+    font-size: 0.78rem;
+  }
 }

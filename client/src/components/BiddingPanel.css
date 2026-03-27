@@ -30,6 +30,7 @@
   font-weight: 600;
   border: 1px solid rgba(255, 255, 255, 0.12);
   cursor: pointer;
+  touch-action: manipulation;
   transition: background 120ms ease, transform 120ms ease;
   display: flex;
   align-items: center;
@@ -40,4 +41,15 @@
   background: #2563eb;
   border-color: transparent;
   transform: translateY(-2px);
+}
+
+@media (max-width: 600px) {
+  .bid-panel {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .bid-options {
+    justify-content: center;
+  }
 }

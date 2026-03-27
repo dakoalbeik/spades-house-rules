@@ -16,6 +16,29 @@
   overflow: hidden;
 }
 
+@media (max-width: 600px) {
+  .page-ingame {
+    padding: 6px 10px 0;
+    gap: 5px;
+  }
+
+  .pill {
+    padding: 4px 8px;
+    font-size: 0.78rem;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .page-ingame {
+    padding: 3px 8px 0;
+    gap: 2px;
+  }
+
+  .hide-landscape {
+    display: none !important;
+  }
+}
+
 .error,
 .success {
   padding: 10px 12px;
@@ -125,6 +148,11 @@ button:not(.card-btn):disabled {
 .pill.turn {
   background: #2563eb;
   color: #e0f2fe;
+}
+
+.pill.pill-sm {
+  padding: 3px 8px;
+  font-size: 0.75rem;
 }
 
 .players {

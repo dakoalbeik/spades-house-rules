@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BarChart2, Play, SkipForward, XCircle, StopCircle, LogOut } from "lucide-react";
 import type { GameState, PublicPlayer } from "../types";
 import PlayerList from "./PlayerList";
 import BiddingPanel from "./BiddingPanel";
@@ -58,43 +59,74 @@ export default function GameBoard({
       <div className="game-board-header">
         <div className="row spaced">
           <div className="row gap">
-            <div className="pill dark">Phase: {phaseLabel[game.phase]}</div>
-            <div className="pill dark">Round: {game.roundNumber || 1}</div>
-            <div className="pill dark">
-              Decks: {game.options.numDecks} &middot; {game.players.length}/
-              {game.options.maxPlayers} &middot; Nil: {game.options.nilScore ?? 100}
+            <div className="pill dark">{phaseLabel[game.phase]}</div>
+            <div className="pill dark">R{game.roundNumber || 1}</div>
+            <div className="pill dark hide-landscape">
+              {game.options.numDecks}D &middot; {game.players.length}/
+              {game.options.maxPlayers}
             </div>
           </div>
           <div className="actions">
             {isActive && (
               <button
-                className="btn-scores"
+                className="btn-icon btn-icon-neutral"
+                title="Scores"
+                aria-label="Scores"
                 onClick={() => setShowScores(true)}
               >
-                Scores
+                <BarChart2 size={18} />
               </button>
             )}
             {game.phase === "lobby" && myPlayer?.isHost && (
-              <button onClick={onStart}>Start game</button>
+              <button
+                className="btn-icon btn-icon-primary"
+                title="Start game"
+                aria-label="Start game"
+                onClick={onStart}
+              >
+                <Play size={18} />
+              </button>
             )}
             {game.phase === "round_end" && myPlayer?.isHost && (
-              <button onClick={onNextRound}>Start next round</button>
+              <button
+                className="btn-icon btn-icon-primary"
+                title="Start next round"
+                aria-label="Start next round"
+                onClick={onNextRound}
+              >
+                <SkipForward size={18} />
+              </button>
             )}
             {(game.phase === "bidding" || game.phase === "playing") &&
               myPlayer?.isHost &&
               onCancelRound && (
-                <button className="btn-cancel-round" onClick={onCancelRound}>
-                  Dismiss round
+                <button
+                  className="btn-icon btn-icon-warn"
+                  title="Dismiss round"
+                  aria-label="Dismiss round"
+                  onClick={onCancelRound}
+                >
+                  <XCircle size={18} />
                 </button>
               )}
             {myPlayer?.isHost && onEndGame && (
-              <button className="btn-end-game" onClick={onEndGame}>
-                End game
+              <button
+                className="btn-icon btn-icon-danger"
+                title="End game"
+                aria-label="End game"
+                onClick={onEndGame}
+              >
+                <StopCircle size={18} />
               </button>
             )}
             {onLeave && (
-              <button className="btn-leave" onClick={onLeave}>
-                Leave
+              <button
+                className="btn-icon btn-icon-danger"
+                title="Leave game"
+                aria-label="Leave game"
+                onClick={onLeave}
+              >
+                <LogOut size={18} />
               </button>
             )}
           </div>

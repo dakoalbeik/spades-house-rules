@@ -17,3 +17,26 @@
   justify-content: flex-end;
 }
 
+/* Compact in-game header — just a pill strip, no title */
+.header-ingame {
+  justify-content: flex-end;
+  padding: 0;
+  min-height: 0;
+}
+
+@media (max-width: 600px) {
+  .header {
+    gap: 8px;
+  }
+
+  .status {
+    gap: 5px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .header-ingame {
+    display: none;
+  }
+}
+

@@ -31,3 +31,25 @@
     rgba(255, 255, 255, 0.04) 4px
   );
 }
+
+@media (max-width: 600px) {
+  .opp-fan {
+    width: 34px;
+    height: 48px;
+  }
+
+  .opp-fan-card {
+    width: 52px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .opp-fan {
+    width: 26px;
+    height: 36px;
+  }
+
+  .opp-fan-card {
+    width: 40px;
+  }
+}

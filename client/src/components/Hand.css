@@ -11,6 +11,24 @@
   min-width: 80px;
 }
 
+@media (max-width: 600px) {
+  .hand {
+    height: 96px; /* card-small (~84px) + hover lift room */
+    min-width: 60px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .hand {
+    height: 68px; /* card at 44px wide (~62px tall) + hover room */
+    min-width: 44px;
+  }
+
+  .hand-outer {
+    gap: 3px;
+  }
+}
+
 .hand-card-slot {
   position: absolute;
   bottom: 0;

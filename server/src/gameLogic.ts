@@ -12,6 +12,7 @@ import type {
   Suit,
   PlayerId,
   TrickPlay,
+  SocketId,
 } from "shared";
 import { CardId, GameId } from "shared/dist/game";
 
@@ -133,7 +134,10 @@ export function getCurrentTurn(game: GameState): PlayerId | null {
 
 function determineTrickWinner(
   trick: CurrentTrick,
-  duplicateOverride?: { lastDuplicatePlayerId: PlayerId; choice: "win" | "lose" },
+  duplicateOverride?: {
+    lastDuplicatePlayerId: PlayerId;
+    choice: "win" | "lose";
+  },
 ): PlayerId {
   const leadSuit = trick.leadSuit ?? trick.plays[0]?.card.suit;
   let winning = trick.plays[0];
@@ -268,7 +272,7 @@ export function newPlayerId(): PlayerId {
 }
 
 export function createGame(
-  hostId: string,
+  hostId: SocketId,
   hostName: string,
   options: GameOptions,
 ): GameState {
@@ -370,7 +374,9 @@ export function playCard(
   game: GameState,
   playerId: PlayerId,
   cardId: CardId,
-): { ok: true; trickComplete: boolean; pendingDuplicateChoice: boolean } | { ok: false; error: string } {
+):
+  | { ok: true; trickComplete: boolean; pendingDuplicateChoice: boolean }
+  | { ok: false; error: string } {
   if (game.phase !== "playing" || !game.currentTrick)
     return { ok: false, error: "Not in play phase" };
 
@@ -414,8 +420,7 @@ export function playCard(
     game.spadesBroken = true;
   }
 
-  const trickComplete =
-    game.currentTrick.plays.length === game.players.length;
+  const trickComplete = game.currentTrick.plays.length === game.players.length;
 
   // Check immediately if this card duplicates an earlier play in the trick
   const lastPlay = game.currentTrick.plays[game.currentTrick.plays.length - 1];
@@ -423,10 +428,14 @@ export function playCard(
     .slice(0, -1)
     .some(
       (p) =>
-        p.card.rank === lastPlay.card.rank && p.card.suit === lastPlay.card.suit,
+        p.card.rank === lastPlay.card.rank &&
+        p.card.suit === lastPlay.card.suit,
     );
 
-  if (hasPriorDuplicate && isDuplicatePairCompetitive(game.currentTrick, lastPlay)) {
+  if (
+    hasPriorDuplicate &&
+    isDuplicatePairCompetitive(game.currentTrick, lastPlay)
+  ) {
     game.pendingDuplicateChoice = { playerId: player.playerId, card };
     game.statusMessage = `${player.name} played a duplicate — choose to win or lose the trick`;
     return { ok: true, trickComplete, pendingDuplicateChoice: true };
@@ -436,7 +445,10 @@ export function playCard(
 }
 
 /** Returns true if the duplicate pair could win the trick (i.e. nothing else beats them). */
-function isDuplicatePairCompetitive(trick: CurrentTrick, lastPlay: TrickPlay): boolean {
+function isDuplicatePairCompetitive(
+  trick: CurrentTrick,
+  lastPlay: TrickPlay,
+): boolean {
   // Build a fake trick without the last duplicate; check if the first instance wins
   const fakeTrick: CurrentTrick = {
     ...trick,
@@ -444,8 +456,10 @@ function isDuplicatePairCompetitive(trick: CurrentTrick, lastPlay: TrickPlay): b
   };
   const winner = determineTrickWinner(fakeTrick);
   return (
-    fakeTrick.plays.find((p) => p.playerId === winner)?.card.rank === lastPlay.card.rank &&
-    fakeTrick.plays.find((p) => p.playerId === winner)?.card.suit === lastPlay.card.suit
+    fakeTrick.plays.find((p) => p.playerId === winner)?.card.rank ===
+      lastPlay.card.rank &&
+    fakeTrick.plays.find((p) => p.playerId === winner)?.card.suit ===
+      lastPlay.card.suit
   );
 }
 
@@ -598,7 +612,10 @@ export function placeBidForCurrentBidder(
 }
 
 /** Get all legal card ids for a player in the current trick (for auto-play). */
-export function getLegalCardIds(game: GameState, player: PlayerState): CardId[] {
+export function getLegalCardIds(
+  game: GameState,
+  player: PlayerState,
+): CardId[] {
   if (!game.currentTrick || game.phase !== "playing") return [];
   const leadSuit =
     game.currentTrick.leadSuit ?? game.currentTrick.plays[0]?.card.suit;

@@ -276,7 +276,7 @@ function App() {
 
   return (
     <div className={`page ${game ? "page-ingame" : ""}`}>
-      <Header status={status} playerName={playerName} gameId={gameId} />
+      <Header status={status} playerName={playerName} gameId={gameId} isIngame={!!game} />
 
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
 

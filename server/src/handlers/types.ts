@@ -11,15 +11,17 @@ import type { GameState } from "shared";
 import type { GameRepository } from "../games/GameRepository";
 import type { ConnectionRegistry } from "../connections/ConnectionRegistry";
 
-export type AppSocket = Omit<
-  Socket<
-    ClientToServerEvents,
-    ServerToClientEvents,
-    InterServerEvents,
-    SocketData
-  >,
-  "id"
-> & {
+type BaseSocket = Socket<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData
+>;
+
+/**
+ * AppSocket is a wrapper around Socket that has the correct SocketId type for its id field, so we don't have to cast it everywhere.
+ */
+export type AppSocket = Omit<BaseSocket, "id"> & {
   id: SocketId;
 };
 

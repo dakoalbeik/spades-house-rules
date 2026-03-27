@@ -244,3 +244,98 @@
   font-size: 0.62rem;
   padding: 1px 6px;
 }
+
+@media (max-width: 600px) {
+  .table-surface {
+    grid-template-columns: minmax(80px, 110px) 1fr minmax(80px, 110px);
+    grid-template-rows: minmax(105px, 155px) minmax(90px, 1fr) minmax(55px, 70px);
+    border-width: 5px;
+  }
+
+  .table-seat {
+    gap: 6px;
+  }
+
+  .table-seat-top {
+    padding-top: 1.2rem;
+    gap: 1rem;
+  }
+
+  /* Stack fan + label vertically on side seats so labels don't overflow viewport */
+  .table-seat-left,
+  .table-seat-right {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0 2px;
+    gap: 4px;
+  }
+
+  .seat-label {
+    padding: 2px 7px 2px 3px;
+    gap: 4px;
+    max-width: 100%;
+  }
+
+  .seat-avatar {
+    width: 18px;
+    height: 18px;
+    font-size: 0.58rem;
+  }
+
+  .seat-name {
+    font-size: 0.68rem;
+    max-width: 52px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .seat-ratio {
+    font-size: 0.6rem;
+  }
+}
+
+/* ── Landscape mobile ─────────────────────────────────────────── */
+@media (orientation: landscape) and (max-height: 500px) {
+  .table-surface {
+    grid-template-columns: minmax(60px, 80px) 1fr minmax(60px, 80px);
+    grid-template-rows: minmax(70px, 100px) minmax(60px, 1fr) minmax(38px, 52px);
+    border-width: 4px;
+  }
+
+  .table-seat-left,
+  .table-seat-right {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0 2px;
+    gap: 3px;
+  }
+
+  .table-seat-top {
+    padding-top: 0.6rem;
+    gap: 0.6rem;
+  }
+
+  .seat-name {
+    font-size: 0.62rem;
+    max-width: 44px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .seat-ratio {
+    font-size: 0.58rem;
+  }
+
+  .seat-avatar {
+    width: 16px;
+    height: 16px;
+    font-size: 0.52rem;
+  }
+
+  .seat-label {
+    padding: 1px 5px 1px 2px;
+    gap: 3px;
+  }
+}
