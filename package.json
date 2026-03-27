@@ -10,12 +10,17 @@
     "server": "npm run dev --prefix server",
     "build": "npm run build --prefix shared && npm run build --prefix server && npm run build --prefix client",
     "test": "echo \"No tests defined\"",
-    "dev:play": "node scripts/dev-with-tabs.mjs"
+    "dev:play": "node scripts/dev-with-tabs.mjs",
+    "dev:setup": "ts-node --project tsconfig.scripts.json scripts/dev-setup.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "@types/node": "^25.5.0",
+    "concurrently": "^9.2.1",
+    "playwright": "^1.58.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.2"
   }
 }
