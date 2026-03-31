@@ -141,7 +141,10 @@ export interface GameState {
   /** Present when a player must choose to win or lose a trick due to a duplicate card */
   pendingDuplicateChoice?: PendingDuplicateChoice;
   /** Stored after the player makes their duplicate choice; used by finalizeTrick for tie-breaking */
-  resolvedDuplicateChoice?: { lastDuplicatePlayerId: PlayerId; choice: "win" | "lose" };
+  resolvedDuplicateChoice?: {
+    lastDuplicatePlayerId: PlayerId;
+    choice: "win" | "lose";
+  };
   /** Set during the delay between trick completion and trick clearance, for client animations */
   trickResolution?: TrickResolution;
   /** Chat bubbles shown near each player; keyed by playerId string */

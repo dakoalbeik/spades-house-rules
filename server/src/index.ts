@@ -44,7 +44,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname, '../../client/dist')));
+app.use(express.static(path.join(__dirname, "../../client/dist")));
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
@@ -152,8 +152,8 @@ io.on("connection", (s: Socket) => {
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
 const HOST = "0.0.0.0";
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../../client/dist/index.html"));
 });
 
 server.listen(PORT, () => {
