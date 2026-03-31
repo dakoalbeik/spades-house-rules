@@ -4,14 +4,26 @@ FROM node:18-alpine AS base
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files and lock files
 COPY package*.json ./
 COPY shared/package*.json ./shared/
+COPY shared/package-lock.json ./shared/
 COPY client/package*.json ./client/
+COPY client/package-lock.json ./client/
 COPY server/package*.json ./server/
+COPY server/package-lock.json ./server/
 
-# Install dependencies for all workspaces
+# Install dependencies for root
 RUN npm ci
+
+# Install dependencies for shared
+RUN npm ci --prefix shared
+
+# Install dependencies for client
+RUN npm ci --prefix client
+
+# Install dependencies for server
+RUN npm ci --prefix server
 
 # Copy source code
 COPY . .
