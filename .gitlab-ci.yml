@@ -14,7 +14,7 @@ deploy:
     - gcloud config set compute/region $GCP_REGION
   script:
     - gcloud builds submit --source . --tag $GCP_IMAGE_NAME --project $GCP_PROJECT_ID
-    - gcloud run deploy spades-multiplayer --image $GCP_IMAGE_NAME --platform managed --region $GCP_REGION --allow-unauthenticated --port 4000 --memory 1Gi --cpu 1 --max-instances 10
+    - gcloud run deploy spades-multiplayer --image $GCP_IMAGE_NAME --platform managed --region $GCP_REGION --allow-unauthenticated --port 8080 --memory 1Gi --cpu 1 --max-instances 10
   only:
     - main
   environment:

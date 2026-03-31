@@ -168,7 +168,5 @@ server.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`Server listening on http://${HOST}:${PORT}`);
   // eslint-disable-next-line no-console
-  console.log(
-    `Serving SPA from: ${path.resolve(__dirname, "../client/dist")}`,
-  );
+  console.log(`Serving SPA from: ${path.resolve(__dirname, "../client/dist")}`);
 });
