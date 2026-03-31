@@ -21,7 +21,7 @@ import { useToast } from "./hooks/useToast";
 import "./App.css";
 import type { CardId, GameId, PlayerId } from "shared/dist/game";
 
-const serverUrl = "http://localhost:4000";
+const serverUrl = import.meta.env.VITE_SERVER_URL ?? window.location.origin;
 
 function App() {
   const socket = useMemo(() => {

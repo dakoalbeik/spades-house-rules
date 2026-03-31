@@ -44,7 +44,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname, "../../client/dist")));
+app.use(express.static(path.resolve(__dirname, "../client/dist")));
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
@@ -152,11 +152,23 @@ io.on("connection", (s: Socket) => {
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
 const HOST = "0.0.0.0";
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../../client/dist/index.html"));
+// Serve SPA fallback - must be after all other routes
+app.use((req, res) => {
+  const filePath = path.join(__dirname, "../client/dist/index.html");
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      // eslint-disable-next-line no-console
+      console.error("Error serving index.html:", err);
+      res.status(404).json({ error: "Not found" });
+    }
+  });
 });
 
 server.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`Server listening on http://${HOST}:${PORT}`);
+  // eslint-disable-next-line no-console
+  console.log(
+    `Serving SPA from: ${path.resolve(__dirname, "../client/dist")}`,
+  );
 });

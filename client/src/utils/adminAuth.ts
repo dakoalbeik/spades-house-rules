@@ -1,5 +1,4 @@
-// TODO: Replace with an environment variable or config when deploying
-const ADMIN_API = "http://localhost:4000/admin";
+const ADMIN_API = "/admin";
 
 export const ADMIN_SESSION_KEY = "admin_password";
 
