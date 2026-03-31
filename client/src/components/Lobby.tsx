@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Socket } from "socket.io-client";
 import type { ClientToServerEvents, ServerToClientEvents } from "shared";
 import "./Lobby.css";
@@ -44,6 +45,15 @@ export default function Lobby({
   onJoiningChange,
   isConnected,
 }: LobbyProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = () => {
+    const url = `${window.location.origin}${window.location.pathname}?game=${gameId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
   const handleCreate = () => {
     if (!playerName.trim()) { onError("Enter your name"); return; }
     if (!isConnected) { onError("Not connected to server. Please wait..."); return; }
@@ -181,12 +191,24 @@ export default function Lobby({
 
           <label className="lobby-label">
             Game ID
-            <input
-              value={gameId}
-              onChange={(e) => onGameIdChange(e.target.value.toUpperCase())}
-              placeholder="e.g. ABC123"
-              className="gameid-input"
-            />
+            <div className="gameid-row">
+              <input
+                value={gameId}
+                onChange={(e) => onGameIdChange(e.target.value.toUpperCase())}
+                placeholder="e.g. ABC123"
+                className="gameid-input"
+              />
+              {gameId && (
+                <button
+                  type="button"
+                  className="copy-link-btn"
+                  onClick={handleCopyLink}
+                  title="Copy invite link"
+                >
+                  {copied ? "Copied!" : "Copy link"}
+                </button>
+              )}
+            </div>
           </label>
 
           <label className="lobby-label">

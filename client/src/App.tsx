@@ -39,7 +39,22 @@ function App() {
     return s;
   }, []);
 
-  const [gameId, setGameId] = useState<GameId | "">(() => getGameId() || "");
+  const [gameId, setGameId] = useState<GameId | "">(() => {
+    const stored = getGameId();
+    if (stored) return stored;
+    const urlParam = new URLSearchParams(window.location.search).get("game");
+    return (urlParam?.toUpperCase() as GameId) || "";
+  });
+
+  // Remove ?game= from the URL once we've read it
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("game")) {
+      params.delete("game");
+      const newUrl = window.location.pathname + (params.toString() ? "?" + params.toString() : "");
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, []);
   const [playerName, setPlayerName] = useState(() => getPlayerName() || "");
   const [numDecks, setNumDecks] = useState(1);
   const [maxPlayers, setMaxPlayers] = useState(4);
