@@ -1,5 +1,5 @@
-# Use Node.js 18 as base image
-FROM node:18-alpine AS base
+# Use Node.js 22 as base image (required by vite, react-router, and @vitejs/plugin-react)
+FROM node:22-alpine AS base
 
 # Set working directory
 WORKDIR /app
@@ -38,7 +38,7 @@ RUN npm run build --prefix client
 RUN npm run build --prefix server
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:22-alpine AS production
 
 # Set working directory
 WORKDIR /app
@@ -59,11 +59,11 @@ COPY --from=base /app/client/dist ./client/dist
 COPY --from=base /app/shared/dist ./shared/dist
 
 # Expose port
-EXPOSE 4000
+EXPOSE 8080
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV PORT=4000
+ENV PORT=8080
 ENV HOST=0.0.0.0
 
 # Start the server
