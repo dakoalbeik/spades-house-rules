@@ -1,0 +1,22 @@
+stages:
+  - deploy
+
+variables:
+  GCP_IMAGE_NAME: gcr.io/$GCP_PROJECT_ID/spades-multiplayer:$CI_COMMIT_SHA
+
+deploy:
+  stage: deploy
+  image: google/cloud-sdk:alpine
+  before_script:
+    - echo $GCP_SA_KEY | base64 -d > /tmp/gcp-key.json
+    - gcloud auth activate-service-account --key-file /tmp/gcp-key.json
+    - gcloud config set project $GCP_PROJECT_ID
+    - gcloud config set compute/region $GCP_REGION
+  script:
+    - gcloud builds submit --source . --tag $GCP_IMAGE_NAME --project $GCP_PROJECT_ID
+    - gcloud run deploy spades-multiplayer --image $GCP_IMAGE_NAME --platform managed --region $GCP_REGION --allow-unauthenticated --port 4000 --memory 1Gi --cpu 1 --max-instances 10
+  only:
+    - main
+  environment:
+    name: production
+    url: https://spades-multiplayer-$GCP_PROJECT_ID.$GCP_REGION.run.app

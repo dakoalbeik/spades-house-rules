@@ -22,24 +22,30 @@ export default function BiddingPanel({
   const nilScore = game.options.nilScore ?? 100;
 
   return (
-    <div className="bid-panel">
-      <span className="bid-label">Your bid</span>
-      <div className="bid-options">
-        <button
-          className="bid-btn bid-nil"
-          onClick={() => onBid(0)}
-          title={`+${nilScore} if you take no tricks, −${nilScore} otherwise`}
-        >
-          Nil
-        </button>
-        {hand.map((card, index) => {
-          const bid = index + 1;
-          return (
-            <button key={card.id} className="bid-btn" onClick={() => onBid(bid)}>
-              {bid}
-            </button>
-          );
-        })}
+    <div className="bid-overlay">
+      <div className="bid-modal">
+        <div className="bid-modal-header">
+          <span className="bid-modal-suit">♠</span>
+          <span className="bid-modal-title">How many tricks?</span>
+          <span className="bid-modal-suit">♠</span>
+        </div>
+        <div className="bid-options">
+          <button
+            className="bid-btn bid-nil"
+            onClick={() => onBid(0)}
+            title={`+${nilScore} if you take no tricks, −${nilScore} otherwise`}
+          >
+            Nil
+          </button>
+          {hand.map((card, index) => {
+            const bid = index + 1;
+            return (
+              <button key={card.id} className="bid-btn" onClick={() => onBid(bid)}>
+                {bid}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

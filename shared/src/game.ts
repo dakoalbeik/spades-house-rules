@@ -90,7 +90,7 @@ export interface PublicPlayer {
 export interface GameStatePayload {
   id: GameId;
   phase: GamePhase;
-  options: { numDecks: number; maxPlayers: number };
+  options: GameOptions;
   players: PublicPlayer[];
   hand: Card[];
   spadesBroken: boolean;

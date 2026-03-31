@@ -7,14 +7,14 @@
 
 .hand {
   position: relative;
-  height: 126px; /* card-medium (~116px) + hover lift room */
-  min-width: 80px;
+  height: 150px; /* card-medium (~140px) + hover lift room */
+  min-width: 96px;
 }
 
 @media (max-width: 600px) {
   .hand {
-    height: 96px; /* card-small (~84px) + hover lift room */
-    min-width: 60px;
+    height: 115px; /* card-small (~101px) + hover lift room */
+    min-width: 72px;
   }
 }
 

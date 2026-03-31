@@ -22,7 +22,7 @@ export default function Hand({
   const isLandscapeMobile = window.innerWidth > window.innerHeight && window.innerHeight < 500;
   const isMobile = window.innerWidth < 600;
   const isSmall = isMobile || isLandscapeMobile;
-  const CARD_W = isLandscapeMobile ? 44 : isSmall ? 60 : 80;
+  const CARD_W = isLandscapeMobile ? 44 : isSmall ? 72 : 96;
   const OFFSET = isLandscapeMobile ? 20 : isSmall ? 26 : 36;
   const cardSize = isSmall ? "small" : "medium";
 
@@ -37,27 +37,23 @@ export default function Hand({
         Your turn
       </span>
       <div className="hand" style={{ width: handWidth + "px" }}>
-        {count === 0 ? (
-          <p className="muted">No cards in hand.</p>
-        ) : (
-          sortedHand.map((card, index) => (
-            <div
-              key={card.id}
-              className="hand-card-slot"
-              style={{
-                left: index * OFFSET + "px",
-                zIndex: index,
-              }}
-            >
-              <Card
-                card={card}
-                size={cardSize}
-                onClick={() => onPlayCard(card.id)}
-                disabled={!canPlay(card.id)}
-              />
-            </div>
-          ))
-        )}
+        {sortedHand.map((card, index) => (
+          <div
+            key={card.id}
+            className="hand-card-slot"
+            style={{
+              left: index * OFFSET + "px",
+              zIndex: index,
+            }}
+          >
+            <Card
+              card={card}
+              size={cardSize}
+              onClick={() => onPlayCard(card.id)}
+              disabled={!canPlay(card.id)}
+            />
+          </div>
+        ))}
       </div>
     </div>
   );

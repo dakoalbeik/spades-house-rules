@@ -19,26 +19,28 @@
   flex-shrink: 0;
 }
 
-/* Table area grows to fill available space */
+/* Table area grows to fill available space; reserve room for fixed footer */
 .game-board-play-area {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 220px;
   overflow: visible;
+  padding-bottom: 175px;
 }
 
-/* Hand + bidding panel pinned to bottom of viewport while scrolling */
+/* Hand pinned to bottom of viewport, out of document flow */
 .game-board-footer {
-  position: sticky;
+  position: fixed;
   bottom: 0;
+  left: 0;
+  right: 0;
   padding: 10px 0 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   z-index: 20;
-  flex-shrink: 0;
 }
 
 /* ── Utility classes (scoped to board) ─────────────────────── */
@@ -222,6 +224,7 @@
 
   .game-board-play-area {
     min-height: 100px;
+    padding-bottom: 100px;
   }
 
   .info {

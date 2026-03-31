@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import http from "http";
+import path from "path";
 import { Server, Socket } from "socket.io";
 import type {
   ClientToServerEvents,
@@ -42,6 +43,8 @@ const MAX_GAME_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.use(express.static(path.join(__dirname, '../../client/dist')));
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
@@ -148,6 +151,11 @@ io.on("connection", (s: Socket) => {
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000;
 const HOST = "0.0.0.0";
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+});
+
 server.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`Server listening on http://${HOST}:${PORT}`);

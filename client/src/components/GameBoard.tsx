@@ -143,15 +143,17 @@ export default function GameBoard({
         )}
       </div>
 
-      {/* Footer: bidding panel + player hand (sticky at bottom) */}
+      {/* Bidding modal overlay */}
+      <BiddingPanel
+        game={game}
+        myPlayer={myPlayer}
+        hand={game.hand}
+        onBid={onBid}
+      />
+
+      {/* Footer: player hand (sticky at bottom) */}
       {isActive && (
         <div className="game-board-footer">
-          <BiddingPanel
-            game={game}
-            myPlayer={myPlayer}
-            hand={game.hand}
-            onBid={onBid}
-          />
           <Hand
             game={game}
             isMyTurn={isMyTurn}

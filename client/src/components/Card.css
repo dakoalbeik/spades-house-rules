@@ -8,10 +8,12 @@
     transform 0.2s,
     filter 0.2s;
   width: fit-content !important;
+  perspective: 1000px;
+  transform-style: preserve-3d;
 }
 
 .card-btn:hover:not(:disabled) {
-  transform: translateY(-8px);
+  transform: translateY(-8px) rotateX(5deg) rotateY(-2deg);
   filter: brightness(1.1);
 }
 
@@ -26,24 +28,61 @@
 .card-image {
   display: block;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s ease-out;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.card-image::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 50%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card-btn:hover:not(:disabled) .card-image {
+  transform: rotateX(-2deg) rotateY(1deg) translateZ(10px);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .card-image-small {
-  width: 60px;
+  width: 72px;
   height: auto;
+  position: relative;
 }
 
 .card-image-medium {
-  width: 80px;
+  width: 96px;
   height: auto;
+  position: relative;
 }
 
 .card-image-large {
-  width: 100px;
+  width: 120px;
   height: auto;
+  position: relative;
 }
 
 .card-display {
   display: inline-block;
+  perspective: 1000px;
+  transform-style: preserve-3d;
 }
