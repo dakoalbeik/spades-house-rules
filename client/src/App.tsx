@@ -51,7 +51,9 @@ function App() {
     const params = new URLSearchParams(window.location.search);
     if (params.has("game")) {
       params.delete("game");
-      const newUrl = window.location.pathname + (params.toString() ? "?" + params.toString() : "");
+      const newUrl =
+        window.location.pathname +
+        (params.toString() ? "?" + params.toString() : "");
       window.history.replaceState({}, "", newUrl);
     }
   }, []);
@@ -67,7 +69,7 @@ function App() {
 
   // Update document title to reflect host status
   useEffect(() => {
-    const isHost = game?.players.find((p) => p.isSelf)?.isHost;
+    const isHost = game?.player?.isHost;
     if (isHost) {
       document.title = "Spades — Host";
     } else {
@@ -186,7 +188,7 @@ function App() {
     };
   }, [socket, gameId, game, handleError, handleSuccess]);
 
-  const myPlayer = game?.players.find((p) => p.isSelf);
+  const myPlayer = game?.player;
 
   const handleGameIdChange = (id: string) => {
     setGameId(id as GameId);
@@ -211,16 +213,24 @@ function App() {
 
   const handleBid = (bid: number) => {
     if (!gameId || !myPlayer) return;
-    socket.emit("placeBid", { gameId, playerId: myPlayer.playerId, bid }, (resp) => {
-      if (!resp?.ok) handleError(resp?.error);
-    });
+    socket.emit(
+      "placeBid",
+      { gameId, playerId: myPlayer.playerId, bid },
+      (resp) => {
+        if (!resp?.ok) handleError(resp?.error);
+      },
+    );
   };
 
   const handlePlay = (cardId: CardId) => {
     if (!gameId || !myPlayer) return;
-    socket.emit("playCard", { gameId, playerId: myPlayer.playerId, cardId }, (resp) => {
-      if (!resp?.ok) handleError(resp?.error);
-    });
+    socket.emit(
+      "playCard",
+      { gameId, playerId: myPlayer.playerId, cardId },
+      (resp) => {
+        if (!resp?.ok) handleError(resp?.error);
+      },
+    );
   };
 
   const handleNextRound = () => {
@@ -239,9 +249,13 @@ function App() {
 
   const handleResolveDuplicate = (choice: "win" | "lose") => {
     if (!gameId || !myPlayer) return;
-    socket.emit("resolveDuplicateCard", { gameId, playerId: myPlayer.playerId, choice }, (resp) => {
-      if (!resp?.ok) handleError(resp?.error);
-    });
+    socket.emit(
+      "resolveDuplicateCard",
+      { gameId, playerId: myPlayer.playerId, choice },
+      (resp) => {
+        if (!resp?.ok) handleError(resp?.error);
+      },
+    );
   };
 
   const handleCancelRound = () => {
@@ -291,7 +305,12 @@ function App() {
 
   return (
     <div className={`page ${game ? "page-ingame" : ""}`}>
-      <Header status={status} playerName={playerName} gameId={gameId} isIngame={!!game} />
+      <Header
+        status={status}
+        playerName={playerName}
+        gameId={gameId}
+        isIngame={!!game}
+      />
 
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
 

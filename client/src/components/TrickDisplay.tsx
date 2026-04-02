@@ -21,7 +21,9 @@ export default function TrickDisplay({ game }: TrickDisplayProps) {
       </div>
       <div className="plays">
         {game.currentTrick?.plays.map((play) => {
-          const player = game.players.find((p) => p.id === play.playerId);
+          const player = [game.player, ...game.opponents].find(
+            (p) => p.playerId === play.playerId,
+          );
           return (
             <div key={play.card.id} className="play">
               <strong>{player?.name ?? "Player"}</strong>
@@ -33,4 +35,3 @@ export default function TrickDisplay({ game }: TrickDisplayProps) {
     </div>
   );
 }
-

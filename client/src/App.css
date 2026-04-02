@@ -91,7 +91,7 @@ input {
   color: #e2e8f0;
 }
 
-button:not(.card-btn) {
+button:not(.card-btn):not(.bid-btn):not(.bid-confirm-btn) {
   cursor: pointer;
   border: none;
   background: linear-gradient(90deg, #2563eb, #22c55e);
@@ -104,11 +104,11 @@ button:not(.card-btn) {
     opacity 120ms ease;
 }
 
-button:not(.card-btn):hover {
+button:not(.card-btn):not(.bid-btn):not(.bid-confirm-btn):not(.seat-circle):hover {
   transform: translateY(-1px);
 }
 
-button:not(.card-btn):disabled {
+button:not(.card-btn):not(.bid-btn):not(.bid-confirm-btn):disabled {
   opacity: 0.6;
   cursor: not-allowed;
   background: #334155;

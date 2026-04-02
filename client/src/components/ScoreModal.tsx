@@ -8,11 +8,7 @@ interface ScoreModalProps {
 
 export default function ScoreModal({ game, onClose }: ScoreModalProps) {
   return (
-    <div
-      className="score-backdrop"
-      role="presentation"
-      onClick={onClose}
-    >
+    <div className="score-backdrop" role="presentation" onClick={onClose}>
       <div
         className="score-modal"
         role="dialog"
@@ -23,7 +19,11 @@ export default function ScoreModal({ game, onClose }: ScoreModalProps) {
         <div className="score-modal-header">
           <span className="score-modal-title">Scorecard</span>
           <span className="score-modal-round">Round {game.roundNumber}</span>
-          <button className="score-modal-close" onClick={onClose} aria-label="Close">
+          <button
+            className="score-modal-close"
+            onClick={onClose}
+            aria-label="Close"
+          >
             ✕
           </button>
         </div>
@@ -38,13 +38,15 @@ export default function ScoreModal({ game, onClose }: ScoreModalProps) {
             </tr>
           </thead>
           <tbody>
-            {game.players.map((p) => (
+            {[game.player, ...game.opponents].map((p) => (
               <tr key={p.playerId} className={p.isSelf ? "row-self" : ""}>
                 <td className="col-name">
                   {p.name}
                   {p.isSelf && <span className="you-chip">You</span>}
                   {p.isHost && <span className="host-chip">Host</span>}
-                  {p.status === "left" && <span className="left-chip">Left</span>}
+                  {p.status === "left" && (
+                    <span className="left-chip">Left</span>
+                  )}
                 </td>
                 <td className="col-num">{p.bid ?? "—"}</td>
                 <td className="col-num">{p.tricks}</td>

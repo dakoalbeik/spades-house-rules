@@ -19,13 +19,19 @@
   flex-shrink: 0;
 }
 
-/* Table area grows to fill available space; reserve room for fixed footer */
+/* Table area grows to fill available space; reserve room for fixed footer when active */
 .game-board-play-area {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 220px;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
   overflow: visible;
+  position: relative;
+}
+
+.game-board-active .game-board-play-area {
   padding-bottom: 175px;
 }
 
@@ -76,7 +82,10 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: background 120ms ease, transform 120ms ease, border-color 120ms ease;
+  transition:
+    background 120ms ease,
+    transform 120ms ease,
+    border-color 120ms ease;
 }
 
 .btn-icon:hover {

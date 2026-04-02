@@ -17,6 +17,17 @@
   justify-content: flex-end;
 }
 
+.pill-btn {
+  cursor: pointer;
+  background: inherit;
+  border: none;
+  transition: opacity 120ms;
+}
+
+.pill-btn:hover {
+  opacity: 0.75;
+}
+
 /* Compact in-game header — just a pill strip, no title */
 .header-ingame {
   justify-content: flex-end;

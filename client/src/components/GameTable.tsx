@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ChatBubble, GameState, PublicPlayer } from "../types";
-import OpponentFan from "./OpponentFan";
+import type { ChatBubble, GameState } from "../types";
 import TrickPile from "./TrickPile";
 import { avatarColor } from "../utils/avatarColor";
 import "./GameTable.css";
@@ -9,19 +8,46 @@ type Area = "top" | "bot" | "left" | "right" | "center";
 
 interface GameTableProps {
   game: GameState;
-  myPlayer: PublicPlayer | undefined;
 }
 
-function getPositions(count: number): ("top" | "left" | "right")[] {
-  if (count === 1) return ["top"];
-  if (count === 2) return ["left", "right"];
-  return ["left", "top", "right"];
+const ORBIT_RADIUS = 150; // Distance from center in pixels
+const MAX_SEATS = 10; // Maximum number of seats around the table
+
+interface SeatPosition {
+  x: number;
+  y: number;
+  angle: number;
 }
 
-function SeatRatio({ phase, bid, tricks }: { phase: string; bid: number | undefined; tricks: number }) {
+function calculateSeatPosition(
+  seatIndex: number,
+  totalSeats: number,
+): SeatPosition {
+  // Distribute all players around full circle, with player 0 always at bottom
+  // angle = π/2 is down (positive y), then go clockwise for other players
+  const angle = Math.PI / 2 - (seatIndex / totalSeats) * 2 * Math.PI;
+  const x = ORBIT_RADIUS * Math.cos(angle);
+  const y = ORBIT_RADIUS * Math.sin(angle);
+
+  return { x, y, angle };
+}
+
+function SeatRatio({
+  phase,
+  bid,
+  tricks,
+}: {
+  phase: string;
+  bid: number | undefined;
+  tricks: number;
+}) {
   if (bid == null) return null;
   if (phase === "bidding") return <span className="seat-ratio">bid {bid}</span>;
-  return <span className="seat-ratio">{tricks}/{bid}</span>;
+  return (
+    <span className="seat-ratio">
+      {tricks}/{bid}
+    </span>
+  );
 }
 
 /** Tracks which bubbles are currently visible, hiding timed ones when they expire. */
@@ -43,11 +69,15 @@ function useChatBubbles(incoming: Record<string, ChatBubble> | undefined) {
       if (typeof bubble.clearOn === "number") {
         const delay = (bubble.clearOn as number) - now;
         timers.push(
-          setTimeout(() => setVisible((prev) => {
-            const copy = { ...prev };
-            delete copy[pid];
-            return copy;
-          }), delay),
+          setTimeout(
+            () =>
+              setVisible((prev) => {
+                const copy = { ...prev };
+                delete copy[pid];
+                return copy;
+              }),
+            delay,
+          ),
         );
       }
     }
@@ -57,10 +87,11 @@ function useChatBubbles(incoming: Record<string, ChatBubble> | undefined) {
   return visible;
 }
 
-export default function GameTable({ game, myPlayer }: GameTableProps) {
-  const players = game.players;
+export default function GameTable({ game }: GameTableProps) {
+  const players = [game.player, ...game.opponents];
   const isPlaying = game.phase === "playing";
   const trick = game.currentTrick;
+  const totalPlayers = Math.min(players.length, MAX_SEATS);
 
   const playsBySeat: (NonNullable<typeof trick>["plays"][number] | null)[] =
     new Array(players.length).fill(null);
@@ -75,61 +106,114 @@ export default function GameTable({ game, myPlayer }: GameTableProps) {
     (p) => p.playerId === game.currentTurnPlayerId,
   );
 
-  const opponents = players.slice(1);
-  const positions = getPositions(opponents.length);
   const bubbles = useChatBubbles(game.chatBubbles);
 
   // Map seat index to a position area for the trick pile
   const seatToArea = (seatIndex: number): Area => {
     if (seatIndex === 0) return "bot";
-    const pos = positions[seatIndex - 1];
-    if (pos === "top") return "top";
-    if (pos === "left") return "left";
-    if (pos === "right") return "right";
-    return "center"; // fallback for 5+ players beyond known positions
+
+    const position = calculateSeatPosition(seatIndex, totalPlayers);
+    const angleDeg = (position.angle * 180) / Math.PI;
+
+    // Approximate which side based on angle
+    if (angleDeg < -45) return "left";
+    if (angleDeg < 45) return "top";
+    if (angleDeg < 135) return "right";
+    return "bot";
   };
+
+  const playerSeat = calculateSeatPosition(0, totalPlayers);
+  const playerIsActive = currentTurnSeat === 0;
+  const playerIsHost = game.player.isHost;
+  const playerStatus = game.player.status;
 
   return (
     <div className="game-table">
       <div className="table-surface">
-        {/* Opponents */}
-        {opponents.map((opp, i) => {
-          const position = positions[i];
-          const seatIndex = i + 1;
+        {/* Own player seat (always at bottom) */}
+        <div
+          className={`table-seat${playerIsActive ? " current-turn" : ""}`}
+          style={{
+            left: `calc(50% + ${playerSeat.x}px)`,
+            top: `calc(50% + ${playerSeat.y}px)`,
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          <div className="seat-label">
+            <div
+              className="seat-avatar"
+              style={{ background: avatarColor(game.player.name) }}
+            >
+              {game.player.name.trim()[0]?.toUpperCase() ?? "?"}
+            </div>
+            <span className="seat-name">
+              {game.player.name}
+              <span className="you-label"> (You)</span>
+            </span>
+            <SeatRatio
+              phase={game.phase}
+              bid={game.player.bid}
+              tricks={game.player.tricks}
+            />
+            {playerIsHost && <span className="host-badge">Host</span>}
+            {playerStatus === "left" && (
+              <span className="left-badge">Left</span>
+            )}
+          </div>
+
+          {bubbles[game.player.playerId] && (
+            <div
+              className="chat-bubble"
+              key={bubbles[game.player.playerId]!.message}
+            >
+              {bubbles[game.player.playerId]!.message}
+            </div>
+          )}
+        </div>
+
+        {/* Opponent player seats */}
+        {game.opponents.map((player, opponentIndex) => {
+          const seatIndex = opponentIndex + 1;
+          if (seatIndex >= totalPlayers) return null;
+
+          const seatPos = calculateSeatPosition(seatIndex, totalPlayers);
           const isActive = seatIndex === currentTurnSeat;
 
           return (
             <div
-              key={opp.playerId}
-              className={`table-seat table-seat-${position} ${isActive ? "current-turn" : ""}`}
+              key={player.playerId}
+              className={`table-seat ${isActive ? "current-turn" : ""}`}
+              style={{
+                left: `calc(50% + ${seatPos.x}px)`,
+                top: `calc(50% + ${seatPos.y}px)`,
+                transform: "translate(-50%, -50%)",
+              }}
             >
-              {/* Right: fan first (toward center), label outer */}
-              {position === "right" && (
-                <div className="seat-fan-wrap">
-                  <OpponentFan cardCount={opp.cardCount} position={position} />
-                </div>
-              )}
-
               <div className="seat-label">
-                <div className="seat-avatar" style={{ background: avatarColor(opp.name) }}>
-                  {opp.name.trim()[0]?.toUpperCase() ?? "?"}
+                <div
+                  className="seat-avatar"
+                  style={{ background: avatarColor(player.name) }}
+                >
+                  {player.name.trim()[0]?.toUpperCase() ?? "?"}
                 </div>
-                <span className="seat-name">{opp.name}</span>
-                <SeatRatio phase={game.phase} bid={opp.bid} tricks={opp.tricks} />
-                {opp.isHost && <span className="host-badge">Host</span>}
-                {opp.status === "left" && <span className="left-badge">Left</span>}
+                <span className="seat-name">{player.name}</span>
+                <SeatRatio
+                  phase={game.phase}
+                  bid={player.bid}
+                  tricks={player.tricks}
+                />
+                {player.isHost && <span className="host-badge">Host</span>}
+                {player.status === "left" && (
+                  <span className="left-badge">Left</span>
+                )}
               </div>
 
-              {/* Top / left: label outer, fan toward center */}
-              {position !== "right" && (
-                <div className="seat-fan-wrap">
-                  <OpponentFan cardCount={opp.cardCount} position={position} />
-                </div>
-              )}
-
-              {bubbles[opp.playerId] && (
-                <div className="chat-bubble" key={bubbles[opp.playerId]!.message}>
-                  {bubbles[opp.playerId]!.message}
+              {bubbles[player.playerId] && (
+                <div
+                  className="chat-bubble"
+                  key={bubbles[player.playerId]!.message}
+                >
+                  {bubbles[player.playerId]!.message}
                 </div>
               )}
             </div>
@@ -145,35 +229,6 @@ export default function GameTable({ game, myPlayer }: GameTableProps) {
               seatToArea={seatToArea}
               winnerId={game.trickResolution?.winnerId}
             />
-          )}
-        </div>
-
-        {/* Bottom seat (me) */}
-        <div
-          className={`table-seat table-seat-bottom ${0 === currentTurnSeat ? "current-turn" : ""}`}
-        >
-          {players[0] && (
-            <>
-              <div className="seat-label">
-                <div className="seat-avatar" style={{ background: avatarColor(players[0].name) }}>
-                  {players[0].name.trim()[0]?.toUpperCase() ?? "?"}
-                </div>
-                <span className="seat-name">
-                  {players[0].name}
-                  {myPlayer?.playerId === players[0].playerId && (
-                    <span className="you-label"> (You)</span>
-                  )}
-                </span>
-                <SeatRatio phase={game.phase} bid={players[0].bid} tricks={players[0].tricks} />
-                {players[0].isHost && <span className="host-badge">Host</span>}
-                {players[0].status === "left" && <span className="left-badge">Left</span>}
-              </div>
-              {bubbles[players[0].playerId] && (
-                <div className="chat-bubble" key={bubbles[players[0].playerId]!.message}>
-                  {bubbles[players[0].playerId]!.message}
-                </div>
-              )}
-            </>
           )}
         </div>
       </div>
