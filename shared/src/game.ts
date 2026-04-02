@@ -91,7 +91,8 @@ export interface GameStatePayload {
   id: GameId;
   phase: GamePhase;
   options: GameOptions;
-  players: PublicPlayer[];
+  player: PublicPlayer;
+  opponents: PublicPlayer[];
   hand: Card[];
   spadesBroken: boolean;
   currentTrick?: CurrentTrick;
@@ -159,7 +160,8 @@ export interface SerializedGame {
   id: GameId;
   phase: GamePhase;
   options: GameOptions;
-  players: PublicPlayer[];
+  player: PublicPlayer;
+  opponents: PublicPlayer[];
   hand: Card[];
   spadesBroken: boolean;
   currentTrick?: CurrentTrick;

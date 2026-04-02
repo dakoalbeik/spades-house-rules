@@ -1,7 +1,14 @@
 import { useState } from "react";
-import { BarChart2, Play, SkipForward, XCircle, StopCircle, LogOut } from "lucide-react";
+import {
+  BarChart2,
+  Play,
+  SkipForward,
+  XCircle,
+  StopCircle,
+  LogOut,
+} from "lucide-react";
 import type { GameState, PublicPlayer } from "../types";
-import PlayerList from "./PlayerList";
+import SeatSelection from "./SeatSelection";
 import BiddingPanel from "./BiddingPanel";
 import GameTable from "./GameTable";
 import Hand from "./Hand";
@@ -62,7 +69,7 @@ export default function GameBoard({
             <div className="pill dark">{phaseLabel[game.phase]}</div>
             <div className="pill dark">R{game.roundNumber || 1}</div>
             <div className="pill dark hide-landscape">
-              {game.options.numDecks}D &middot; {game.players.length}/
+              {game.options.numDecks}D &middot; {1 + game.opponents.length}/
               {game.options.maxPlayers}
             </div>
           </div>
@@ -137,9 +144,9 @@ export default function GameBoard({
       {/* Main area */}
       <div className="game-board-play-area">
         {game.phase === "lobby" ? (
-          <PlayerList game={game} canKick={myPlayer?.isHost} onKick={onKick} />
+          <SeatSelection game={game} canKick={myPlayer?.isHost} onKick={onKick} />
         ) : (
-          <GameTable game={game} myPlayer={myPlayer} />
+          <GameTable game={game} />
         )}
       </div>
 
@@ -194,9 +201,8 @@ export default function GameBoard({
               </>
             ) : (
               <p className="duplicate-choice-title">
-                {game.players.find(
-                  (p) =>
-                    p.playerId === game.pendingDuplicateChoice?.playerId,
+                {[game.player, ...game.opponents].find(
+                  (p) => p.playerId === game.pendingDuplicateChoice?.playerId,
                 )?.name ?? "A player"}{" "}
                 played a duplicate{" "}
                 <strong>

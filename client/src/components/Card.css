@@ -29,6 +29,9 @@
   display: block;
   border-radius: 8px;
   box-shadow:
+    -2px 0 4px rgba(0, 0, 0, 0.2),
+    -4px 0 8px rgba(0, 0, 0, 0.3),
+    -8px 0 16px rgba(0, 0, 0, 0.25),
     0 4px 16px rgba(0, 0, 0, 0.4),
     0 2px 8px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -58,6 +61,9 @@
 .card-btn:hover:not(:disabled) .card-image {
   transform: rotateX(-2deg) rotateY(1deg) translateZ(10px);
   box-shadow:
+    -3px 0 6px rgba(0, 0, 0, 0.25),
+    -6px 0 12px rgba(0, 0, 0, 0.35),
+    -12px 0 24px rgba(0, 0, 0, 0.3),
     0 8px 32px rgba(0, 0, 0, 0.5),
     0 4px 16px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);

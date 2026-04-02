@@ -7,6 +7,7 @@ import type {
   GamePhase,
   GameState,
   PlayerState,
+  PublicPlayer,
   Rank,
   SerializedGame,
   Suit,
@@ -224,6 +225,10 @@ export function serializeGame(
   viewerId: PlayerId,
 ): SerializedGame {
   const viewer = game.players.find((p) => p.playerId === viewerId);
+  if (!viewer) {
+    throw new Error(`Player ${viewerId} not found in game ${game.id}`);
+  }
+
   const currentTurn = getCurrentTurn(game);
   const viewerIndex = game.players.findIndex((p) => p.playerId === viewerId);
   const orderedPlayers = game.players
@@ -239,6 +244,32 @@ export function serializeGame(
     }
   }
 
+  const playerObj: PublicPlayer = {
+    id: viewer.id,
+    playerId: viewer.playerId,
+    name: viewer.name,
+    score: viewer.score,
+    tricks: viewer.tricks,
+    bid: viewer.bid,
+    cardCount: viewer.hand.length,
+    isHost: viewer.isHost,
+    isSelf: true,
+    status: viewer.status ?? DEFAULT_STATUS,
+  };
+
+  const opponents = orderedPlayers.slice(1).map((p) => ({
+    id: p.id,
+    playerId: p.playerId,
+    name: p.name,
+    score: p.score,
+    tricks: p.tricks,
+    bid: p.bid,
+    cardCount: p.hand.length,
+    isHost: p.isHost,
+    isSelf: false,
+    status: p.status ?? DEFAULT_STATUS,
+  }));
+
   return {
     id: game.id,
     phase: game.phase,
@@ -251,19 +282,9 @@ export function serializeGame(
     pendingDuplicateChoice: game.pendingDuplicateChoice,
     trickResolution: game.trickResolution,
     chatBubbles: activeBubbles,
-    hand: viewer ? sortHand(viewer.hand) : [],
-    players: orderedPlayers.map((p) => ({
-      id: p.id,
-      playerId: p.playerId,
-      name: p.name,
-      score: p.score,
-      tricks: p.tricks,
-      bid: p.bid,
-      cardCount: p.hand.length,
-      isHost: p.isHost,
-      isSelf: p.playerId === viewerId,
-      status: p.status ?? DEFAULT_STATUS,
-    })),
+    hand: sortHand(viewer.hand),
+    player: playerObj,
+    opponents: opponents,
   };
 }
 
